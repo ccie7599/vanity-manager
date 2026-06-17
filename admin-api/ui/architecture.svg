@@ -1,0 +1,207 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" font-family="'Space Mono', 'Courier New', monospace" role="img" aria-labelledby="title desc">
+  <title id="title">Vanity Manager Architecture</title>
+  <desc id="desc">Control plane in Akamai Functions writes through to Spin KV, Object Storage, and EdgeKV. Data plane EdgeWorker reads EdgeKV at 4200 Akamai locations and serves redirects with X-Vanity-* headers captured by DS2.</desc>
+
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f0420"/>
+      <stop offset="100%" stop-color="#050014"/>
+    </linearGradient>
+    <pattern id="stripes" patternUnits="userSpaceOnUse" width="24" height="24" patternTransform="rotate(135)">
+      <rect width="12" height="24" fill="#ff2d95"/>
+      <rect x="12" width="12" height="24" fill="#00f0ff"/>
+    </pattern>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feOffset dx="6" dy="6"/>
+      <feFlood flood-color="#ff2d95"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadowBlue" x="-10%" y="-10%" width="120%" height="120%">
+      <feOffset dx="6" dy="6"/>
+      <feFlood flood-color="#00f0ff"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadowYellow" x="-10%" y="-10%" width="120%" height="120%">
+      <feOffset dx="6" dy="6"/>
+      <feFlood flood-color="#ffe500"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#ffe500"/>
+    </marker>
+    <marker id="arrowPink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#ff2d95"/>
+    </marker>
+    <marker id="arrowLime" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b6ff00"/>
+    </marker>
+  </defs>
+
+  <!-- background -->
+  <rect width="1000" height="720" fill="url(#bgGrad)"/>
+
+  <!-- decorative stripes top + bottom -->
+  <rect x="-50" y="-10" width="1100" height="22" fill="url(#stripes)" transform="rotate(-1.5 500 360)"/>
+  <rect x="-50" y="708" width="1100" height="22" fill="url(#stripes)" transform="rotate(1.2 500 360)"/>
+
+  <!-- title -->
+  <text x="500" y="58" text-anchor="middle" font-family="'Rubik Mono One', Impact, sans-serif"
+        font-size="36" fill="#ffe500" transform="rotate(-1.2 500 58)">
+    VANITY MANAGER
+    <tspan x="500" dy="32" font-size="14" fill="#00f0ff" font-family="'Press Start 2P', monospace">
+      MAGNUM &amp; VANITY MODES
+    </tspan>
+  </text>
+
+  <!-- ======================== CONTROL PLANE BOX ======================== -->
+  <g transform="translate(40 140) rotate(-0.7)">
+    <rect x="0" y="0" width="920" height="220" fill="#1e293b" stroke="#fff8e7" stroke-width="3"/>
+    <rect x="-12" y="-12" width="920" height="220" fill="none" stroke="#ff2d95" stroke-width="3" opacity="0.7"/>
+    <text x="20" y="32" font-family="'Press Start 2P', monospace" font-size="12" fill="#ff2d95">
+      CONTROL PLANE — Akamai Functions (~30 DCs)
+    </text>
+
+    <!-- admin api box -->
+    <g filter="url(#shadowBlue)">
+      <rect x="40" y="60" width="220" height="120" fill="#ffe500" stroke="#050014" stroke-width="3"/>
+    </g>
+    <text x="150" y="92" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="11" fill="#050014">ADMIN API</text>
+    <text x="150" y="115" text-anchor="middle" font-size="11" fill="#050014">Spin / Rust</text>
+    <text x="150" y="135" text-anchor="middle" font-size="10" fill="#050014">CRUD · Import · UI</text>
+    <text x="150" y="155" text-anchor="middle" font-size="10" fill="#050014">Stats · Test</text>
+    <text x="150" y="172" text-anchor="middle" font-size="9" fill="#050014">/api/v1/*</text>
+
+    <!-- spin kv box -->
+    <g filter="url(#shadowYellow)">
+      <rect x="320" y="60" width="180" height="120" fill="#ff2d95" stroke="#050014" stroke-width="3"/>
+    </g>
+    <text x="410" y="92" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="10" fill="#fff8e7">SPIN KV</text>
+    <text x="410" y="115" text-anchor="middle" font-size="11" fill="#fff8e7">Hot store</text>
+    <text x="410" y="135" text-anchor="middle" font-size="10" fill="#fff8e7">CosmosDB-backed</text>
+    <text x="410" y="152" text-anchor="middle" font-size="10" fill="#fff8e7">global consistency</text>
+    <text x="410" y="172" text-anchor="middle" font-size="9" fill="#fff8e7">rule:host|type|path</text>
+
+    <!-- object storage -->
+    <g filter="url(#shadow)">
+      <rect x="560" y="60" width="160" height="55" fill="#00f0ff" stroke="#050014" stroke-width="3"/>
+    </g>
+    <text x="640" y="80" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">OBJ STORAGE</text>
+    <text x="640" y="100" text-anchor="middle" font-size="9" fill="#050014">rules.json + history</text>
+
+    <!-- reconcile worker -->
+    <g filter="url(#shadow)">
+      <rect x="560" y="125" width="160" height="55" fill="#b6ff00" stroke="#050014" stroke-width="3"/>
+    </g>
+    <text x="640" y="145" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">RECONCILE</text>
+    <text x="640" y="166" text-anchor="middle" font-size="9" fill="#050014">drains pending-ekv:*</text>
+
+    <!-- ekv push -->
+    <g filter="url(#shadow)">
+      <rect x="760" y="93" width="140" height="55" fill="#a855f7" stroke="#050014" stroke-width="3"/>
+    </g>
+    <text x="830" y="113" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#fff8e7">EKV PUSH</text>
+    <text x="830" y="134" text-anchor="middle" font-size="9" fill="#fff8e7">EdgeGrid signed</text>
+
+    <!-- arrows inside control plane -->
+    <line x1="260" y1="120" x2="318" y2="120" stroke="#ffe500" stroke-width="3" marker-end="url(#arrow)"/>
+    <line x1="500" y1="100" x2="558" y2="80"  stroke="#ffe500" stroke-width="3" marker-end="url(#arrow)"/>
+    <line x1="500" y1="140" x2="558" y2="140" stroke="#ffe500" stroke-width="3" marker-end="url(#arrow)"/>
+    <line x1="500" y1="160" x2="558" y2="155" stroke="#ffe500" stroke-width="3" marker-end="url(#arrow)"/>
+    <line x1="720" y1="155" x2="758" y2="125" stroke="#ffe500" stroke-width="3" marker-end="url(#arrow)"/>
+    <line x1="720" y1="85"  x2="758" y2="115" stroke="#ffe500" stroke-width="3" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- ============== Admin / UI / API traffic also lands in DS2 ============== -->
+  <!-- The Akamai property captures EVERY request, not just EW-served redirects.
+       Admin UI, REST API, reconcile, and import/export calls all generate DS2
+       lines via the property's standard request log. -->
+  <path d="M 970 240 Q 996 380 970 540" fill="none" stroke="#b6ff00" stroke-width="3"
+        stroke-dasharray="8 6" marker-end="url(#arrowLime)" opacity="0.95"/>
+  <text x="993" y="395" font-family="'Press Start 2P', monospace" font-size="8"
+        fill="#b6ff00" transform="rotate(90 993 395)">admin/UI &amp; API → DS2</text>
+
+  <!-- ============== EdgeKV bridge bar ============== -->
+  <g transform="translate(0 380)">
+    <rect x="40" y="0" width="920" height="44" fill="url(#stripes)" opacity="0.6"/>
+    <rect x="40" y="0" width="920" height="44" fill="none" stroke="#fff8e7" stroke-width="3"/>
+    <text x="500" y="29" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="13" fill="#050014">EDGEKV  ·  globally distributed key/value, ~5–10s propagation</text>
+  </g>
+
+  <!-- ============== DATA PLANE BOX ============== -->
+  <g transform="translate(40 460) rotate(0.6)">
+    <rect x="0" y="0" width="920" height="200" fill="#1e293b" stroke="#fff8e7" stroke-width="3"/>
+    <rect x="-12" y="-12" width="920" height="200" fill="none" stroke="#00f0ff" stroke-width="3" opacity="0.7"/>
+    <text x="20" y="32" font-family="'Press Start 2P', monospace" font-size="12" fill="#00f0ff">
+      DATA PLANE — EdgeWorker @ 4,200 Akamai locations
+    </text>
+
+    <!-- EW main -->
+    <g filter="url(#shadow)">
+      <rect x="40" y="60" width="280" height="120" fill="#00f0ff" stroke="#050014" stroke-width="3"/>
+    </g>
+    <text x="180" y="90" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="11" fill="#050014">MAGNUM MODE</text>
+    <text x="180" y="115" text-anchor="middle" font-size="11" fill="#050014">EW @ 4,200 PoPs reads</text>
+    <text x="180" y="135" text-anchor="middle" font-size="11" fill="#050014">EdgeKV → 301/302 inline</text>
+    <text x="180" y="155" text-anchor="middle" font-size="11" fill="#050014">&lt;5ms p95 latency</text>
+    <text x="180" y="173" text-anchor="middle" font-size="10" fill="#050014">no property activation</text>
+
+    <!-- response headers callout -->
+    <g filter="url(#shadowYellow)">
+      <rect x="370" y="60" width="270" height="120" fill="#ff2d95" stroke="#050014" stroke-width="3"/>
+    </g>
+    <text x="505" y="88" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="10" fill="#fff8e7">REDIRECT RESPONSE</text>
+    <text x="505" y="113" text-anchor="middle" font-size="10" fill="#fff8e7" font-family="monospace">X-Vanity-Manager: magnum</text>
+    <text x="505" y="131" text-anchor="middle" font-size="10" fill="#fff8e7" font-family="monospace">X-Vanity-Match-Type</text>
+    <text x="505" y="149" text-anchor="middle" font-size="10" fill="#fff8e7" font-family="monospace">X-Vanity-Src-Path</text>
+    <text x="505" y="167" text-anchor="middle" font-size="10" fill="#fff8e7" font-family="monospace">X-Vanity-Target</text>
+
+    <!-- DS2 box -->
+    <g filter="url(#shadow)">
+      <rect x="690" y="60" width="200" height="120" fill="#ffe500" stroke="#050014" stroke-width="3"/>
+    </g>
+    <text x="790" y="90" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="11" fill="#050014">DS2 → CLICKHOUSE</text>
+    <text x="790" y="115" text-anchor="middle" font-size="11" fill="#050014">captures every</text>
+    <text x="790" y="132" text-anchor="middle" font-size="11" fill="#050014">request + headers</text>
+    <text x="790" y="152" text-anchor="middle" font-size="10" fill="#050014">30s batched export</text>
+    <text x="790" y="158" text-anchor="middle" font-size="9" fill="#050014">redirects (EW)</text>
+    <text x="790" y="172" text-anchor="middle" font-size="9" fill="#050014">+ admin/API (Functions)</text>
+
+    <line x1="320" y1="120" x2="368" y2="120" stroke="#ffe500" stroke-width="3" marker-end="url(#arrow)"/>
+    <line x1="640" y1="120" x2="688" y2="120" stroke="#ff2d95" stroke-width="3" marker-end="url(#arrowPink)"/>
+  </g>
+
+  <!-- arrow from control plane to EdgeKV bar -->
+  <line x1="500" y1="358" x2="500" y2="378" stroke="#ffe500" stroke-width="4" marker-end="url(#arrow)"/>
+  <text x="510" y="372" font-size="10" fill="#ffe500" font-family="monospace">push</text>
+
+  <!-- arrow from EdgeKV bar to data plane -->
+  <line x1="500" y1="424" x2="500" y2="458" stroke="#00f0ff" stroke-width="4" marker-end="url(#arrow)"/>
+  <text x="510" y="450" font-size="10" fill="#00f0ff" font-family="monospace">read</text>
+
+  <!-- footer -->
+  <text x="500" y="694" text-anchor="middle" font-family="'Press Start 2P', monospace"
+        font-size="9" fill="#c6bde0">
+    rule changes propagate end-to-end in 5–10 seconds, no property activation needed
+  </text>
+</svg>

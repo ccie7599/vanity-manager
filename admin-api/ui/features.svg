@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" font-family="'Space Mono', 'Courier New', monospace" role="img" aria-labelledby="title desc">
+  <title id="title">Vanity Manager Features</title>
+  <desc id="desc">Three feature pillars: scale capacity (100K+ rules, 4200 edge locations, sub-5ms p95 latency), telemetry (DS2 captures every request with rule provenance), and a 100% serverless deployment shape (no VMs, databases, or clusters).</desc>
+
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f0420"/>
+      <stop offset="100%" stop-color="#050014"/>
+    </linearGradient>
+    <pattern id="stripes" patternUnits="userSpaceOnUse" width="24" height="24" patternTransform="rotate(135)">
+      <rect width="12" height="24" fill="#ff2d95"/>
+      <rect x="12" width="12" height="24" fill="#00f0ff"/>
+    </pattern>
+    <filter id="shadowPink" x="-15%" y="-15%" width="130%" height="130%">
+      <feOffset dx="6" dy="6"/><feFlood flood-color="#ff2d95"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="shadowBlue" x="-15%" y="-15%" width="130%" height="130%">
+      <feOffset dx="6" dy="6"/><feFlood flood-color="#00f0ff"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="shadowYellow" x="-15%" y="-15%" width="130%" height="130%">
+      <feOffset dx="6" dy="6"/><feFlood flood-color="#ffe500"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="shadowLime" x="-15%" y="-15%" width="130%" height="130%">
+      <feOffset dx="6" dy="6"/><feFlood flood-color="#b6ff00"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1000" height="720" fill="url(#bgGrad)"/>
+
+  <!-- decorative stripe banners -->
+  <rect x="-50" y="-10" width="1100" height="22" fill="url(#stripes)" transform="rotate(-1.5 500 360)"/>
+  <rect x="-50" y="708" width="1100" height="22" fill="url(#stripes)" transform="rotate(1.2 500 360)"/>
+
+  <!-- title -->
+  <text x="500" y="62" text-anchor="middle" font-family="'Rubik Mono One', Impact, sans-serif"
+        font-size="36" fill="#ffe500" transform="rotate(-1.2 500 62)">MAGNUM MODE</text>
+  <text x="500" y="92" text-anchor="middle" font-family="'Press Start 2P', monospace"
+        font-size="11" fill="#00f0ff">forward-deployed serving plane: same look, but better</text>
+
+  <!-- ============================ SCALE PILLAR ============================ -->
+  <g transform="translate(40 140) rotate(-1.2)">
+    <g filter="url(#shadowPink)">
+      <rect x="0" y="0" width="290" height="500" fill="#ffe500" stroke="#050014" stroke-width="4"/>
+    </g>
+    <rect x="0" y="0" width="290" height="56" fill="#ff2d95"/>
+    <text x="145" y="38" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="16" fill="#fff8e7">SCALE</text>
+
+    <text x="145" y="135" text-anchor="middle" font-family="'Rubik Mono One', Impact, sans-serif"
+          font-size="58" fill="#050014">100K+</text>
+    <text x="145" y="160" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">rules per deployment</text>
+
+    <line x1="30" y1="195" x2="260" y2="195" stroke="#050014" stroke-width="2"/>
+
+    <text x="145" y="240" text-anchor="middle" font-family="'Rubik Mono One', Impact, sans-serif"
+          font-size="42" fill="#050014">4,200</text>
+    <text x="145" y="262" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">akamai edge locations</text>
+
+    <line x1="30" y1="295" x2="260" y2="295" stroke="#050014" stroke-width="2"/>
+
+    <text x="145" y="345" text-anchor="middle" font-family="'Rubik Mono One', Impact, sans-serif"
+          font-size="42" fill="#050014">&lt;5ms</text>
+    <text x="145" y="367" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">p95 redirect latency</text>
+
+    <line x1="30" y1="400" x2="260" y2="400" stroke="#050014" stroke-width="2"/>
+
+    <text x="145" y="430" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">no per-policy cap</text>
+    <text x="145" y="450" text-anchor="middle" font-size="11" fill="#050014">vs cloudlet's ~5K limit</text>
+    <text x="145" y="475" text-anchor="middle" font-size="10" fill="#050014" font-style="italic">
+      tall + wide rule shapes
+    </text>
+  </g>
+
+  <!-- ========================== TELEMETRY PILLAR ========================== -->
+  <g transform="translate(355 140) rotate(0.4)">
+    <g filter="url(#shadowYellow)">
+      <rect x="0" y="0" width="290" height="500" fill="#00f0ff" stroke="#050014" stroke-width="4"/>
+    </g>
+    <rect x="0" y="0" width="290" height="56" fill="#ff2d95"/>
+    <text x="145" y="38" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="16" fill="#fff8e7">TELEMETRY</text>
+
+    <text x="145" y="130" text-anchor="middle" font-family="'Rubik Mono One', Impact, sans-serif"
+          font-size="36" fill="#050014">EVERY</text>
+    <text x="145" y="170" text-anchor="middle" font-family="'Rubik Mono One', Impact, sans-serif"
+          font-size="36" fill="#050014">REQUEST</text>
+    <text x="145" y="195" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">captured by DataStream 2</text>
+
+    <line x1="30" y1="225" x2="260" y2="225" stroke="#050014" stroke-width="2"/>
+
+    <text x="145" y="255" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">→ ClickHouse</text>
+    <text x="145" y="275" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">→ Hydrolix</text>
+    <text x="145" y="295" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">→ S3 / Splunk / Datadog</text>
+
+    <line x1="30" y1="320" x2="260" y2="320" stroke="#050014" stroke-width="2"/>
+
+    <text x="145" y="350" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">RULE PROVENANCE</text>
+    <text x="145" y="372" text-anchor="middle" font-size="11" fill="#050014" font-family="monospace">X-Vanity-Manager</text>
+    <text x="145" y="388" text-anchor="middle" font-size="11" fill="#050014" font-family="monospace">X-Vanity-Match-Type</text>
+    <text x="145" y="404" text-anchor="middle" font-size="11" fill="#050014" font-family="monospace">X-Vanity-Src-Path</text>
+    <text x="145" y="420" text-anchor="middle" font-size="11" fill="#050014" font-family="monospace">X-Vanity-Target</text>
+
+    <line x1="30" y1="445" x2="260" y2="445" stroke="#050014" stroke-width="2"/>
+
+    <text x="145" y="473" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">live admin counters</text>
+  </g>
+
+  <!-- ========================= SERVERLESS PILLAR ========================== -->
+  <g transform="translate(670 140) rotate(-0.6)">
+    <g filter="url(#shadowBlue)">
+      <rect x="0" y="0" width="290" height="500" fill="#b6ff00" stroke="#050014" stroke-width="4"/>
+    </g>
+    <rect x="0" y="0" width="290" height="56" fill="#ff2d95"/>
+    <text x="145" y="38" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="14" fill="#fff8e7">100% SERVERLESS</text>
+
+    <text x="145" y="135" text-anchor="middle" font-family="'Rubik Mono One', Impact, sans-serif"
+          font-size="78" fill="#050014">0</text>
+    <text x="145" y="170" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="11" fill="#050014">VMs · DBs · clusters</text>
+
+    <line x1="30" y1="200" x2="260" y2="200" stroke="#050014" stroke-width="2"/>
+
+    <text x="145" y="230" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">CONTROL PLANE</text>
+    <text x="145" y="250" text-anchor="middle" font-size="11" fill="#050014">Akamai Functions</text>
+    <text x="145" y="266" text-anchor="middle" font-size="10" fill="#050014" font-style="italic">Spin / Rust / Wasm</text>
+
+    <line x1="30" y1="290" x2="260" y2="290" stroke="#050014" stroke-width="2"/>
+
+    <text x="145" y="320" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">DATA PLANE</text>
+    <text x="145" y="340" text-anchor="middle" font-size="11" fill="#050014">EdgeWorkers + EdgeKV</text>
+    <text x="145" y="356" text-anchor="middle" font-size="10" fill="#050014" font-style="italic">runs at every Akamai PoP</text>
+
+    <line x1="30" y1="380" x2="260" y2="380" stroke="#050014" stroke-width="2"/>
+
+    <text x="145" y="410" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">SOURCE OF TRUTH</text>
+    <text x="145" y="430" text-anchor="middle" font-size="11" fill="#050014">Linode Object Storage</text>
+    <text x="145" y="446" text-anchor="middle" font-size="10" fill="#050014" font-style="italic">~$5/mo, snapshots only</text>
+
+    <line x1="30" y1="465" x2="260" y2="465" stroke="#050014" stroke-width="2"/>
+
+    <text x="145" y="487" text-anchor="middle" font-family="'Press Start 2P', monospace"
+          font-size="9" fill="#050014">no patching · no HA setup</text>
+  </g>
+
+  <!-- closing tagline -->
+  <text x="500" y="678" text-anchor="middle" font-family="'Rubik Mono One', Impact, sans-serif"
+        font-size="14" fill="#ffe500" transform="rotate(-0.5 500 678)">
+    rule changes propagate end-to-end in 5–10 seconds, no property activation
+  </text>
+  <text x="500" y="700" text-anchor="middle" font-family="'Press Start 2P', monospace"
+        font-size="9" fill="#00f0ff">
+    really, really, ridiculously good-looking
+  </text>
+</svg>

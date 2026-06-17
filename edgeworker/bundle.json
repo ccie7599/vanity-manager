@@ -1,0 +1,4 @@
+{
+  "edgeworker-version": "__VERSION__",
+  "description": "Vanity Manager — EdgeKV-backed redirect engine"
+}

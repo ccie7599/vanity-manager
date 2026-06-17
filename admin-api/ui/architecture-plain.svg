@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720"
+     font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+     role="img" aria-labelledby="title desc">
+  <title id="title">Vanity Manager Architecture</title>
+  <desc id="desc">Control plane in Akamai Functions writes through to Spin KV, Object Storage, and EdgeKV. Data plane EdgeWorker reads EdgeKV at 4200 Akamai locations and serves redirects with X-Vanity-* headers captured by DataStream 2.</desc>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrowAccent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="720" fill="#ffffff"/>
+
+  <!-- title -->
+  <text x="500" y="48" text-anchor="middle" font-size="22" font-weight="600" fill="#0f172a">
+    Vanity Manager — Architecture
+  </text>
+  <text x="500" y="72" text-anchor="middle" font-size="13" fill="#64748b">
+    Forward-deployed serving plane (default) and Functions-only mode
+  </text>
+
+  <!-- ============================ CONTROL PLANE ============================ -->
+  <g transform="translate(40 110)">
+    <rect x="0" y="0" width="920" height="220" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="20" y="28" font-size="13" font-weight="600" fill="#334155">
+      Control plane — Akamai Functions (~30 DCs)
+    </text>
+
+    <rect x="40" y="60" width="220" height="120" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+    <text x="150" y="92" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Admin API</text>
+    <text x="150" y="113" text-anchor="middle" font-size="12" fill="#475569">Spin / Rust</text>
+    <text x="150" y="133" text-anchor="middle" font-size="12" fill="#475569">CRUD · Import · UI</text>
+    <text x="150" y="151" text-anchor="middle" font-size="12" fill="#475569">Stats · Test</text>
+    <text x="150" y="170" text-anchor="middle" font-size="11" fill="#94a3b8">/api/v1/*</text>
+
+    <rect x="320" y="60" width="180" height="120" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+    <text x="410" y="92" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Spin KV</text>
+    <text x="410" y="113" text-anchor="middle" font-size="12" fill="#475569">Hot store</text>
+    <text x="410" y="133" text-anchor="middle" font-size="12" fill="#475569">CosmosDB-backed</text>
+    <text x="410" y="151" text-anchor="middle" font-size="12" fill="#475569">global consistency</text>
+    <text x="410" y="170" text-anchor="middle" font-size="11" fill="#94a3b8">rule:host|type|path</text>
+
+    <rect x="560" y="60" width="160" height="55" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+    <text x="640" y="82" text-anchor="middle" font-size="12" font-weight="600" fill="#0f172a">Object Storage</text>
+    <text x="640" y="100" text-anchor="middle" font-size="11" fill="#475569">rules.json + history</text>
+
+    <rect x="560" y="125" width="160" height="55" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+    <text x="640" y="146" text-anchor="middle" font-size="12" font-weight="600" fill="#0f172a">Reconcile worker</text>
+    <text x="640" y="165" text-anchor="middle" font-size="11" fill="#475569">drains pending-ekv:*</text>
+
+    <rect x="760" y="93" width="140" height="55" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+    <text x="830" y="114" text-anchor="middle" font-size="12" font-weight="600" fill="#0f172a">EdgeKV push</text>
+    <text x="830" y="133" text-anchor="middle" font-size="11" fill="#475569">EdgeGrid signed</text>
+
+    <line x1="260" y1="120" x2="318" y2="120" stroke="#475569" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <line x1="500" y1="100" x2="558" y2="80"  stroke="#475569" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <line x1="500" y1="140" x2="558" y2="140" stroke="#475569" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <line x1="500" y1="160" x2="558" y2="155" stroke="#475569" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <line x1="720" y1="155" x2="758" y2="125" stroke="#475569" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <line x1="720" y1="85"  x2="758" y2="115" stroke="#475569" stroke-width="1.2" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- admin/UI/API → DS2 dashed loop -->
+  <path d="M 970 220 Q 996 380 970 540" fill="none" stroke="#94a3b8" stroke-width="1.2"
+        stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+  <text x="993" y="380" font-size="10" fill="#64748b" transform="rotate(90 993 380)">
+    admin/UI &amp; API → DS2
+  </text>
+
+  <!-- EdgeKV bridge bar -->
+  <g transform="translate(0 350)">
+    <rect x="40" y="0" width="920" height="40" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="500" y="26" text-anchor="middle" font-size="13" font-weight="600" fill="#1e3a8a">
+      EdgeKV — globally distributed key/value, ~5–10s propagation
+    </text>
+  </g>
+
+  <!-- DATA PLANE -->
+  <g transform="translate(40 420)">
+    <rect x="0" y="0" width="920" height="200" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="20" y="28" font-size="13" font-weight="600" fill="#334155">
+      Data plane — EdgeWorker @ 4,200 Akamai locations
+    </text>
+
+    <rect x="40" y="60" width="280" height="120" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="180" y="90" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Forward-deployed mode</text>
+    <text x="180" y="113" text-anchor="middle" font-size="12" fill="#475569">EW @ 4,200 PoPs reads</text>
+    <text x="180" y="131" text-anchor="middle" font-size="12" fill="#475569">EdgeKV → 301/302 inline</text>
+    <text x="180" y="151" text-anchor="middle" font-size="12" fill="#475569">&lt;5ms p95 latency</text>
+    <text x="180" y="171" text-anchor="middle" font-size="11" fill="#94a3b8">no property activation needed</text>
+
+    <rect x="370" y="60" width="270" height="120" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+    <text x="505" y="88" text-anchor="middle" font-size="12" font-weight="600" fill="#0f172a">Redirect response</text>
+    <text x="505" y="113" text-anchor="middle" font-size="11" fill="#475569" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">X-Vanity-Manager: forward</text>
+    <text x="505" y="131" text-anchor="middle" font-size="11" fill="#475569" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">X-Vanity-Match-Type</text>
+    <text x="505" y="149" text-anchor="middle" font-size="11" fill="#475569" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">X-Vanity-Src-Path</text>
+    <text x="505" y="167" text-anchor="middle" font-size="11" fill="#475569" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">X-Vanity-Target</text>
+
+    <rect x="690" y="60" width="200" height="120" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+    <text x="790" y="90" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">DataStream 2</text>
+    <text x="790" y="111" text-anchor="middle" font-size="12" fill="#475569">→ ClickHouse / Hydrolix</text>
+    <text x="790" y="129" text-anchor="middle" font-size="12" fill="#475569">30s batched export</text>
+    <text x="790" y="148" text-anchor="middle" font-size="11" fill="#475569">redirects (EW)</text>
+    <text x="790" y="166" text-anchor="middle" font-size="11" fill="#475569">+ admin/API (Functions)</text>
+
+    <line x1="320" y1="120" x2="368" y2="120" stroke="#475569" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <line x1="640" y1="120" x2="688" y2="120" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrowAccent)"/>
+  </g>
+
+  <line x1="500" y1="330" x2="500" y2="348" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrowAccent)"/>
+  <text x="510" y="345" font-size="11" fill="#1e3a8a">push</text>
+
+  <line x1="500" y1="390" x2="500" y2="418" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrowAccent)"/>
+  <text x="510" y="412" font-size="11" fill="#1e3a8a">read</text>
+
+  <text x="500" y="694" text-anchor="middle" font-size="11" fill="#94a3b8">
+    Rule changes propagate end-to-end in 5–10 seconds, no property activation needed
+  </text>
+</svg>

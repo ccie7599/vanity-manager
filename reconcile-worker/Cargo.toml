@@ -1,0 +1,15 @@
+[package]
+name = "reconcile-worker"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+spin-sdk = { workspace = true }
+shared = { path = "../shared", features = ["ekv-client"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }

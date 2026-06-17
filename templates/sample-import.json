@@ -1,0 +1,122 @@
+[
+  {
+    "host": "redirects-dev.example.com",
+    "match_type": "exact",
+    "path": "/sample-path-1",
+    "target_url": "https://www.example.com/destination-1",
+    "status_code": 301,
+    "preserve_query": true,
+    "preserve_path": false,
+    "priority": 0,
+    "enabled": true,
+    "notes": "Sample rule 1 — exact-match, drop the source path"
+  },
+  {
+    "host": "redirects-dev.example.com",
+    "match_type": "exact",
+    "path": "/sample-path-2",
+    "target_url": "https://www.example.com/destination-2",
+    "status_code": 302,
+    "preserve_query": false,
+    "preserve_path": false,
+    "priority": 0,
+    "enabled": true,
+    "notes": "Sample rule 2 — temporary redirect, drop query string"
+  },
+  {
+    "host": "redirects-dev.example.com",
+    "match_type": "prefix",
+    "path": "/legacy/",
+    "target_url": "https://www.example.com/modern/",
+    "status_code": 301,
+    "preserve_query": true,
+    "preserve_path": true,
+    "priority": 0,
+    "enabled": true,
+    "notes": "Sample rule 3 — prefix match, append unmatched suffix to target"
+  },
+  {
+    "host": "redirects-dev.example.com",
+    "match_type": "exact",
+    "path": "/with-query",
+    "target_url": "https://www.example.com/landing",
+    "status_code": 301,
+    "preserve_query": true,
+    "preserve_path": false,
+    "priority": 0,
+    "enabled": true,
+    "notes": "Sample rule 4 — forwards ?utm_source=... to target"
+  },
+  {
+    "host": "redirects-dev.example.com",
+    "match_type": "exact",
+    "path": "/disabled-rule",
+    "target_url": "https://www.example.com/should-not-fire",
+    "status_code": 301,
+    "preserve_query": true,
+    "preserve_path": false,
+    "priority": 0,
+    "enabled": false,
+    "notes": "Sample rule 5 — enabled=false, EdgeWorker should skip this and pass through"
+  },
+  {
+    "host": "redirects-dev.example.com",
+    "match_type": "exact",
+    "path": "/308-permanent-method-preserving",
+    "target_url": "https://www.example.com/permanent",
+    "status_code": 308,
+    "preserve_query": false,
+    "preserve_path": false,
+    "priority": 0,
+    "enabled": true,
+    "notes": "Sample rule 6 — 308 preserves the HTTP method (POST stays POST)"
+  },
+  {
+    "host": "redirects-dev.example.com",
+    "match_type": "exact",
+    "path": "/307-temporary-method-preserving",
+    "target_url": "https://www.example.com/temporary",
+    "status_code": 307,
+    "preserve_query": false,
+    "preserve_path": false,
+    "priority": 0,
+    "enabled": true,
+    "notes": "Sample rule 7 — 307 like 302 but method-preserving"
+  },
+  {
+    "host": "redirects-dev.example.com",
+    "match_type": "prefix",
+    "path": "/products/old-line-",
+    "target_url": "https://www.example.com/products/",
+    "status_code": 301,
+    "preserve_query": true,
+    "preserve_path": true,
+    "priority": 0,
+    "enabled": true,
+    "notes": "Sample rule 8 — longer prefix wins over shorter on the same host"
+  },
+  {
+    "host": "redirects-dev.example.com",
+    "match_type": "prefix",
+    "path": "/products/",
+    "target_url": "https://www.example.com/all-products/",
+    "status_code": 301,
+    "preserve_query": true,
+    "preserve_path": true,
+    "priority": 0,
+    "enabled": true,
+    "notes": "Sample rule 9 — broader prefix; rule 8 wins on /products/old-line-*"
+  },
+  {
+    "host": "redirects-dev.example.com",
+    "match_type": "exact",
+    "path": "/case-insensitive-check",
+    "target_url": "https://www.example.com/ci-target",
+    "status_code": 301,
+    "preserve_query": true,
+    "preserve_path": false,
+    "priority": 0,
+    "enabled": true,
+    "notes": "Sample rule 10 — case-insensitivity is a per-host flag, set via PUT /v1/hosts/<host>"
+  }
+]

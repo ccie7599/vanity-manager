@@ -1,0 +1,136 @@
+[
+  {
+    "host": "old-brand-a.example.com",
+    "path": "/",
+    "target_url": "https://new-brand.example.com",
+    "status_code": 301,
+    "match_type": "exact",
+    "notes": "Acquired-brand apex redirect"
+  },
+  {
+    "host": "old-brand-a.example.com",
+    "path": "/products",
+    "target_url": "https://new-brand.example.com/catalog",
+    "status_code": 301,
+    "match_type": "prefix",
+    "preserve_path": true,
+    "notes": "Section redirect with path preservation"
+  },
+  {
+    "host": "old-brand-a.example.com",
+    "path": "/login",
+    "target_url": "https://new-brand.example.com/account/sign-in",
+    "status_code": 301,
+    "match_type": "exact",
+    "notes": "Auth path redirect"
+  },
+  {
+    "host": "old-brand-b.example.com",
+    "path": "/",
+    "target_url": "https://new-brand.example.com/divisions/trust",
+    "status_code": 301,
+    "match_type": "exact",
+    "notes": "Second acquired brand"
+  },
+  {
+    "host": "old-brand-b.example.com",
+    "path": "/contact",
+    "target_url": "https://new-brand.example.com/divisions/trust/contact",
+    "status_code": 301,
+    "match_type": "prefix",
+    "preserve_path": true,
+    "notes": "Subsection with path preservation"
+  },
+  {
+    "host": "vanity-1.example.com",
+    "path": "/",
+    "target_url": "https://www.example.com/locations/site-001",
+    "status_code": 301,
+    "match_type": "exact",
+    "notes": "Location vanity URL"
+  },
+  {
+    "host": "vanity-2.example.com",
+    "path": "/",
+    "target_url": "https://www.example.com/locations/site-002",
+    "status_code": 301,
+    "match_type": "exact",
+    "notes": "Location vanity URL"
+  },
+  {
+    "host": "vanity-3.example.com",
+    "path": "/",
+    "target_url": "https://www.example.com/locations/site-003",
+    "status_code": 301,
+    "match_type": "exact",
+    "notes": "Location vanity URL"
+  },
+  {
+    "host": "vanity-4.example.com",
+    "path": "/",
+    "target_url": "https://www.example.com/locations/site-004",
+    "status_code": 301,
+    "match_type": "exact",
+    "notes": "Location vanity URL"
+  },
+  {
+    "host": "vanity-1.example.com",
+    "path": "/book",
+    "target_url": "https://www.example.com/booking?location=site-001",
+    "status_code": 302,
+    "match_type": "exact",
+    "notes": "Direct booking vanity — temporary (seasonal)"
+  },
+  {
+    "host": "www.example.com",
+    "path": "/promo",
+    "target_url": "https://www.example.com/deals/current",
+    "status_code": 302,
+    "match_type": "exact",
+    "notes": "Marketing redirect — rotated seasonally"
+  },
+  {
+    "host": "www.example.com",
+    "path": "/photos",
+    "target_url": "https://photos.example.com",
+    "status_code": 301,
+    "match_type": "prefix",
+    "preserve_path": true,
+    "notes": "Photo subdomain migration"
+  },
+  {
+    "host": "www.example.com",
+    "path": "/clinic",
+    "target_url": "https://services.example.com/clinic",
+    "status_code": 301,
+    "match_type": "prefix",
+    "preserve_path": true,
+    "preserve_query": true,
+    "notes": "Service migration with appointment query params"
+  },
+  {
+    "host": "www.example.com",
+    "path": "/legacy-page",
+    "target_url": "https://www.example.com/help/center",
+    "status_code": 301,
+    "match_type": "exact",
+    "notes": "Legacy page consolidation"
+  },
+  {
+    "host": "www.example.com",
+    "path": "/coupons",
+    "target_url": "https://www.example.com/deals/coupons",
+    "status_code": 302,
+    "match_type": "exact",
+    "notes": "Coupon redirect — changes with promotions"
+  },
+  {
+    "host": "www.example.com",
+    "path": "/store",
+    "target_url": "https://www.example.com/shop/storefront",
+    "status_code": 301,
+    "match_type": "prefix",
+    "preserve_path": true,
+    "notes": "Storefront shortcut"
+  }
+]

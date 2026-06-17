@@ -1,0 +1,462 @@
+openapi: 3.0.3
+info:
+  title: Vanity Manager API
+  description: |
+    Control-plane API for the Vanity Manager redirect engine. Runs on Akamai
+    Functions (Spin/Rust). The EdgeWorker (data plane at 4200 Akamai
+    locations) consumes the rules pushed to EdgeKV by this API — it is not a
+    direct client of these endpoints.
+
+    **Authentication**: all `/api/v1/*` endpoints require `?token=<admin_token>`
+    in the query string. The token is configured as a Spin application
+    variable at deploy time.
+
+    **Public endpoints** (no auth): `/api/health`, `/api/v1/ui`, `/api/v1/docs`,
+    `/api/v1/readme`, `/api/v1/openapi.yaml`, `/_beacon/*`.
+  version: 0.1.0
+  contact:
+    name: Brian Apley
+servers:
+  - url: https://vanity.connected-cloud.io
+    description: Production
+  - url: http://127.0.0.1:3000
+    description: Local dev
+
+tags:
+  - name: Rules
+    description: CRUD for redirect rules (composite key = host + match_type + path)
+  - name: Hosts
+    description: Per-host settings — enabled flag and case_sensitive flag
+  - name: Bulk
+    description: Import (merge upsert) and export of the full rule set
+  - name: Introspection
+    description: Stats, sync queue, and lookup-test endpoints
+  - name: Internal
+    description: Reconcile drain + EdgeKV fallback resolver (not for end users)
+  - name: Public
+    description: Docs, UI, health (no auth)
+
+paths:
+  /api/v1/rules:
+    get:
+      tags: [Rules]
+      summary: List rules
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema: { type: string }
+        - name: host
+          in: query
+          description: Optional filter to a single host
+          schema: { type: string }
+      responses:
+        '200':
+          description: Array of rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Redirect' }
+    post:
+      tags: [Rules]
+      summary: Create a rule
+      description: Fails with 409 if the composite key (host, match_type, path) already exists.
+      parameters:
+        - { name: token, in: query, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Redirect' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Redirect' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /api/v1/rules/{host}/{type}/{path}:
+    parameters:
+      - { name: token, in: query, required: true, schema: { type: string } }
+      - { name: host, in: path, required: true, schema: { type: string } }
+      - { name: type, in: path, required: true, schema: { type: string, enum: [exact, prefix] } }
+      - name: path
+        in: path
+        required: true
+        description: Rule path (everything after `/{type}/`). Leading slash implied.
+        schema: { type: string }
+    get:
+      tags: [Rules]
+      summary: Get a rule by composite key
+      responses:
+        '200':
+          description: Rule
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Redirect' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Rules]
+      summary: Update a rule
+      description: Body's (host, match_type, path) must equal the URL composite key.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Redirect' }
+      responses:
+        '200':
+          description: Updated rule
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Redirect' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Rules]
+      summary: Delete a rule
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean, example: true }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/import:
+    post:
+      tags: [Bulk]
+      summary: Bulk import (merge semantics)
+      description: |
+        Upserts each rule on its composite key. Rules not in the payload are
+        NOT deleted. For each imported rule, an inline EdgeKV write-through is
+        attempted; failures land in the pending-sync queue and are drained by
+        the reconcile worker.
+      parameters:
+        - { name: token, in: query, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: '#/components/schemas/Redirect' }
+      responses:
+        '200':
+          description: Import summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imported: { type: integer }
+                  total:    { type: integer }
+                  errors:   { type: array, items: { type: string } }
+
+  /api/v1/export:
+    get:
+      tags: [Bulk]
+      summary: Export all rules (pretty JSON)
+      parameters:
+        - { name: token, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Array of rules (pretty-printed)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Redirect' }
+
+  /api/v1/hosts:
+    get:
+      tags: [Hosts]
+      summary: List hosts with metadata
+      parameters:
+        - { name: token, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Array of hosts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/HostMeta' }
+
+  /api/v1/hosts/{host}:
+    put:
+      tags: [Hosts]
+      summary: Update host settings (enabled / case_sensitive)
+      parameters:
+        - { name: token, in: query, required: true, schema: { type: string } }
+        - { name: host, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/HostMeta' }
+      responses:
+        '200':
+          description: Updated host
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HostMeta' }
+
+  /api/v1/stats:
+    get:
+      tags: [Introspection]
+      summary: Counts + sync status
+      parameters:
+        - { name: token, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Stats
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Stats' }
+
+  /api/v1/pending:
+    get:
+      tags: [Introspection]
+      summary: Inspect the pending EdgeKV push queue
+      parameters:
+        - { name: token, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Pending markers
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PendingMarker' }
+
+  /api/v1/test/{host}/{path}:
+    get:
+      tags: [Introspection]
+      summary: Simulate a lookup against Spin KV (no redirect fired)
+      parameters:
+        - { name: token, in: query, required: true, schema: { type: string } }
+        - { name: host, in: path, required: true, schema: { type: string } }
+        - { name: path, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Match result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match:      { type: boolean }
+                  match_type: { type: string, enum: [exact, prefix] }
+                  input:
+                    type: object
+                    properties:
+                      host: { type: string }
+                      path: { type: string }
+                  rule: { $ref: '#/components/schemas/Redirect' }
+
+  /api/health:
+    get:
+      tags: [Public]
+      summary: Health check (no auth)
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:  { type: string, example: healthy }
+                  service: { type: string, example: vanity-manager }
+
+  /api/v1/docs:
+    get:
+      tags: [Public]
+      summary: Interactive API explorer (RapiDoc UI)
+      responses:
+        '200':
+          description: HTML page
+
+  /api/v1/readme:
+    get:
+      tags: [Public]
+      summary: Rendered project docs (README + ADRs + DS2 guide)
+      responses:
+        '200':
+          description: HTML page
+
+  /api/v1/openapi.yaml:
+    get:
+      tags: [Public]
+      summary: This OpenAPI spec
+      responses:
+        '200':
+          description: YAML
+          content:
+            application/yaml: {}
+
+  /_reconcile/drain:
+    post:
+      tags: [Internal]
+      summary: Drain up to 100 pending EdgeKV markers
+      responses:
+        '200':
+          description: Drain summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  drained: { type: integer }
+                  errors:  { type: integer }
+                  budget:  { type: integer }
+
+  /resolve:
+    get:
+      tags: [Internal]
+      summary: EdgeWorker fallback resolver (called when EdgeKV reads fail at the edge)
+      parameters:
+        - { name: host, in: query, required: true, schema: { type: string } }
+        - { name: path, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Match or miss
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match: { type: boolean }
+                  rule:  { $ref: '#/components/schemas/Redirect' }
+
+components:
+  schemas:
+    Redirect:
+      type: object
+      required: [host, target_url]
+      properties:
+        host:
+          type: string
+          example: old-brand.example.com
+          description: Request hostname — lowercased, port stripped.
+        path:
+          type: string
+          default: "/"
+          example: /mortgage
+          description: Path — leading slash, collapsed `//`, no trailing `/` except root.
+        target_url:
+          type: string
+          format: uri
+          example: https://new-brand.example.com/lending
+        status_code:
+          type: integer
+          enum: [301, 302, 307, 308]
+          default: 301
+          description: |
+            301 = Blue Steel (permanent)
+            302 = Le Tigre (temporary)
+            307 = Ferrari (temp, method-preserving)
+            308 = Locked (perm, method-preserving)
+        match_type:
+          type: string
+          enum: [exact, prefix]
+          default: exact
+        preserve_path:
+          type: boolean
+          default: false
+          description: On prefix match, append the unmatched path suffix to the target.
+        preserve_query:
+          type: boolean
+          default: true
+          description: Forward the request's query string to the target.
+        enabled:
+          type: boolean
+          default: true
+        priority:
+          type: integer
+          default: 0
+          description: Tiebreaker among equal-length prefix matches (higher wins).
+        notes:
+          type: string
+          default: ""
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        ekv_synced_at:
+          type: string
+          readOnly: true
+          description: RFC3339 stamp of the last successful EdgeKV push. Empty while pending.
+
+    HostMeta:
+      type: object
+      required: [host]
+      properties:
+        host:           { type: string }
+        enabled:        { type: boolean, default: true }
+        case_sensitive:
+          type: boolean
+          default: true
+          description: When false, the EdgeWorker lowercases the request path before lookup.
+        rule_count:     { type: integer, readOnly: true }
+        updated_at:     { type: string, readOnly: true }
+        ekv_synced_at:  { type: string, readOnly: true }
+
+    Stats:
+      type: object
+      properties:
+        total_rules:    { type: integer }
+        enabled:        { type: integer }
+        disabled:       { type: integer }
+        unique_hosts:   { type: integer }
+        by_match_type:  { type: object, additionalProperties: { type: integer } }
+        by_status_code: { type: object, additionalProperties: { type: integer } }
+        sync:
+          type: object
+          properties:
+            pending_ekv_pushes:    { type: integer }
+            last_snapshot_at:      { type: string }
+            last_ekv_push_at:      { type: string }
+            ekv_pushes_total:      { type: integer }
+            ekv_errors_total:      { type: integer }
+            pending_drained_total: { type: integer }
+
+    PendingMarker:
+      type: object
+      properties:
+        target:
+          type: string
+          description: 'composite rule key, host:{host} sentinel, or DELETE_RULE:... marker'
+        attempts:      { type: integer }
+        queued_at:     { type: string }
+        last_error_at: { type: string }
+
+  responses:
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            type: object
+            properties: { error: { type: string } }
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties: { error: { type: string } }
+    Conflict:
+      description: Resource already exists
+      content:
+        application/json:
+          schema:
+            type: object
+            properties: { error: { type: string } }

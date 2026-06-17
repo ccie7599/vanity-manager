@@ -1,0 +1,22 @@
+target/
+*.swp
+*.swo
+*~
+.spin/
+.spin-state/
+vanity.db
+.env
+provision.env
+dist/
+/tmp/vm-spin.log
+.spin-aka/
+
+# Customer-specific / engagement material — kept locally, never pushed here
+/customers/
+docs/*-meeting-notes.md
+HANDOFF.md
+docs/loadtest-*/
+
+# Python pycache
+__pycache__/
+*.py[cod]

@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vanity Manager — API Reference</title>
+  <script type="module" src="https://unpkg.com/rapidoc/dist/rapidoc-min.js"></script>
+  <style>
+    body { margin: 0; font-family: 'Space Mono', monospace; }
+    .backlink {
+      position: fixed; top: 0.75rem; right: 1rem; z-index: 10;
+      background: #ff2d95; color: #050014; padding: 0.4rem 0.8rem;
+      text-decoration: none; font-family: 'Press Start 2P', monospace;
+      font-size: 0.65rem; border: 3px solid #050014;
+      box-shadow: 3px 3px 0 #00f0ff; text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <a class="backlink" id="backlink" href="/api/v1/ui">&laquo; Admin</a>
+  <a class="backlink" id="styleToggle" href="#"
+     style="right: 7rem; background: rgba(255,255,255,0.1); color: #fff8e7;
+            border-color: rgba(255,255,255,0.2); box-shadow: none;
+            font-family: 'Space Mono', monospace;">style</a>
+
+  <rapi-doc
+    id="rapidoc"
+    spec-url="/api/v1/openapi.yaml"
+    theme="dark"
+    bg-color="#0f0420"
+    primary-color="#ff2d95"
+    text-color="#fff8e7"
+    nav-bg-color="#050014"
+    nav-text-color="#fff8e7"
+    nav-hover-bg-color="#ff2d95"
+    nav-hover-text-color="#050014"
+    nav-accent-color="#00f0ff"
+    show-header="false"
+    render-style="read"
+    schema-style="table"
+    allow-try="true"
+    allow-authentication="true"
+    default-schema-tab="schema"
+    font-size="default"
+    mono-font="Space Mono, monospace"
+    regular-font="Space Mono, monospace"
+    show-info="true"
+    show-components="true">
+
+    <div slot="overview" style="padding: 1rem 0;">
+      <h2 style="color:#ffe500; font-family: 'Rubik Mono One', Impact, sans-serif; text-transform: uppercase;">
+        Vanity Manager API
+      </h2>
+      <p>Control-plane API for Akamai Functions. The EdgeWorker consumes pushed EdgeKV items — it is not a client of this API.</p>
+      <p>See <a href="/api/v1/readme" style="color:#00f0ff;">architecture &amp; deployment</a> for the full design.</p>
+    </div>
+  </rapi-doc>
+
+  <script>
+    // Style toggle: ?zoolander=on OR cookie vm-style=zoolander → goofy RapiDoc theme
+    (function () {
+      const u = new URLSearchParams(location.search);
+      const param = (u.get('zoolander') || u.get('style') || '').toLowerCase();
+      const cookieIsZoo = document.cookie.split(';').some(
+        (c) => c.trim() === 'vm-style=zoolander'
+      );
+      let isZoo;
+      if (['on', '1', 'true', 'zoolander'].includes(param)) {
+        isZoo = true;
+        document.cookie = 'vm-style=zoolander; Path=/; Max-Age=2592000; SameSite=Lax';
+      } else if (['off', '0', 'false', 'plain'].includes(param)) {
+        isZoo = false;
+        document.cookie = 'vm-style=; Path=/; Max-Age=0; SameSite=Lax';
+      } else {
+        isZoo = cookieIsZoo;
+      }
+      const isPlain = !isZoo;
+      if (isPlain) {
+        const r = document.getElementById('rapidoc');
+        r.setAttribute('theme', 'light');
+        r.setAttribute('bg-color', '#ffffff');
+        r.setAttribute('primary-color', '#2563eb');
+        r.setAttribute('text-color', '#0f172a');
+        r.setAttribute('nav-bg-color', '#f8fafc');
+        r.setAttribute('nav-text-color', '#475569');
+        r.setAttribute('nav-hover-bg-color', '#e2e8f0');
+        r.setAttribute('nav-hover-text-color', '#0f172a');
+        r.setAttribute('nav-accent-color', '#2563eb');
+        r.setAttribute('regular-font', "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif");
+        r.setAttribute('mono-font', 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace');
+        // Backlinks: lighter palette
+        document.querySelectorAll('.backlink').forEach((a) => {
+          a.style.background = '#ffffff';
+          a.style.color = '#0f172a';
+          a.style.borderColor = '#cbd5e1';
+          a.style.boxShadow = 'none';
+          a.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        });
+      }
+      const toggle = document.getElementById('styleToggle');
+      if (toggle) {
+        toggle.textContent = isZoo ? 'zoolander' : 'plain';
+        toggle.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          const u = new URL(location.href);
+          u.searchParams.set('zoolander', isZoo ? 'off' : 'on');
+          location.href = u.toString();
+        });
+      }
+    })();
+
+    // Carry the ?token=... and ?zoolander=on through the backlink.
+    const tok = new URLSearchParams(location.search).get('token');
+    (function () {
+      const qParam = (new URLSearchParams(location.search).get('zoolander') || '').toLowerCase();
+      const cookieIsZoo = document.cookie.split(';').some(
+        (c) => c.trim() === 'vm-style=zoolander'
+      );
+      const isZooNav = ['on', '1', 'true', 'zoolander'].includes(qParam) ||
+        (cookieIsZoo && !['off', '0', 'false', 'plain'].includes(qParam));
+      const params = [];
+      if (tok) params.push('token=' + encodeURIComponent(tok));
+      if (isZooNav) params.push('zoolander=on');
+      const qs = params.length ? '?' + params.join('&') : '';
+      const a = document.getElementById('backlink');
+      if (a && qs) a.href = '/api/v1/ui' + qs;
+    })();
+    if (tok) {
+      // Pre-fill the Try-It-Out auth.
+      document.getElementById('rapidoc').addEventListener('spec-loaded', () => {
+        try {
+          document.getElementById('rapidoc').setApiKey('token', tok, 'query');
+        } catch (_) {}
+      });
+    }
+  </script>
+</body>
+</html>

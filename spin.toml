@@ -1,0 +1,138 @@
+#:schema https://schemas.spinframework.dev/spin/manifest-v2/latest.json
+
+spin_manifest_version = 2
+
+[application]
+name = "vanity-manager"
+version = "0.1.0"
+authors = ["Brian Apley"]
+description = "Really, really, ridiculously good-looking redirect engine"
+
+[variables]
+admin_token = { default = "dev-token-changeme" }
+cache_ttl = { default = "86400" }
+
+# Object Storage (Linode, S3-compatible) — source of truth for rules
+s3_endpoint = { default = "" }
+s3_region = { default = "us-ord-1" }
+s3_bucket = { default = "" }
+s3_access_key = { default = "" }
+s3_secret_key = { default = "" }
+
+# Akamai EdgeKV (data plane for 4200 CDN locations)
+akamai_host = { default = "" }                  # EdgeGrid API host, e.g. akab-xxx.luna.akamaiapis.net
+akamai_client_token = { default = "" }
+akamai_client_secret = { default = "" }
+akamai_access_token = { default = "" }
+ekv_network = { default = "staging" }           # "staging" or "production"
+ekv_namespace = { default = "vanity-manager" }
+ekv_group = { default = "redirects" }
+snapshot_prefix = { default = "catalog" }       # S3 prefix for rules.json (override per deployment)
+
+# Pluggable KV backend for the admin/control plane. Empty / "spin" keeps
+# the default Spin KV (CosmosDB) behavior; set to a NATS adapter URL
+# (e.g. "http://us-ord.nats-kv.connected-cloud.io") to route through the
+# project-nats-kv HTTP adapter — needed when rule count outgrows what
+# Spin's get_keys() can enumerate within Functions' 30s wall-clock.
+kv_backend = { default = "spin" }
+kv_nats_bucket = { default = "" }
+kv_nats_token = { default = "" }
+
+# ---------------------------------------------------------------------------
+# Admin API — CRUD, bulk import/export, metrics webhook, admin UI
+# ---------------------------------------------------------------------------
+[[trigger.http]]
+route = "/api/..."
+component = "admin-api"
+
+[component.admin-api]
+source = "target/wasm32-wasip1/release/admin_api.wasm"
+allowed_outbound_hosts = [
+  "https://*.linodeobjects.com",
+  "https://*.luna.akamaiapis.net",
+  "http://*.nats-kv.connected-cloud.io",
+  "http://edge.nats-kv.connected-cloud.io:8080",
+]
+key_value_stores = ["default"]
+[component.admin-api.variables]
+admin_token = "{{ admin_token }}"
+s3_endpoint = "{{ s3_endpoint }}"
+s3_region = "{{ s3_region }}"
+s3_bucket = "{{ s3_bucket }}"
+s3_access_key = "{{ s3_access_key }}"
+s3_secret_key = "{{ s3_secret_key }}"
+akamai_host = "{{ akamai_host }}"
+akamai_client_token = "{{ akamai_client_token }}"
+akamai_client_secret = "{{ akamai_client_secret }}"
+akamai_access_token = "{{ akamai_access_token }}"
+ekv_network = "{{ ekv_network }}"
+ekv_namespace = "{{ ekv_namespace }}"
+ekv_group = "{{ ekv_group }}"
+snapshot_prefix = "{{ snapshot_prefix }}"
+kv_backend = "{{ kv_backend }}"
+kv_nats_bucket = "{{ kv_nats_bucket }}"
+kv_nats_token = "{{ kv_nats_token }}"
+[component.admin-api.build]
+command = "cargo build -p admin-api --target wasm32-wasip1 --release"
+watch = ["admin-api/src/**/*.rs", "admin-api/ui/**", "shared/src/**/*.rs"]
+
+# ---------------------------------------------------------------------------
+# Redirect Handler — fallback serving path for EW on EdgeKV error
+# ---------------------------------------------------------------------------
+[[trigger.http]]
+route = "/..."
+component = "redirect-handler"
+
+[component.redirect-handler]
+source = "target/wasm32-wasip1/release/redirect_handler.wasm"
+allowed_outbound_hosts = [
+  "http://*.nats-kv.connected-cloud.io",
+  "http://edge.nats-kv.connected-cloud.io:8080",
+]
+key_value_stores = ["default"]
+[component.redirect-handler.variables]
+cache_ttl = "{{ cache_ttl }}"
+kv_backend = "{{ kv_backend }}"
+kv_nats_bucket = "{{ kv_nats_bucket }}"
+kv_nats_token = "{{ kv_nats_token }}"
+[component.redirect-handler.build]
+command = "cargo build -p redirect-handler --target wasm32-wasip1 --release"
+watch = ["redirect-handler/src/**/*.rs", "shared/src/**/*.rs"]
+
+# ---------------------------------------------------------------------------
+# Reconcile Worker — drains EdgeKV pending-marker queue.
+# HTTP trigger today; promote to [[trigger.cron]] once the spin-trigger-cron
+# plugin is installed AND Akamai Functions support is verified (task #8).
+# ---------------------------------------------------------------------------
+[[trigger.http]]
+route = "/_reconcile/..."
+component = "reconcile-worker"
+
+[component.reconcile-worker]
+source = "target/wasm32-wasip1/release/reconcile_worker.wasm"
+allowed_outbound_hosts = [
+  "https://*.linodeobjects.com",
+  "https://*.luna.akamaiapis.net",
+  "http://*.nats-kv.connected-cloud.io",
+  "http://edge.nats-kv.connected-cloud.io:8080",
+]
+key_value_stores = ["default"]
+[component.reconcile-worker.variables]
+s3_endpoint = "{{ s3_endpoint }}"
+s3_region = "{{ s3_region }}"
+s3_bucket = "{{ s3_bucket }}"
+s3_access_key = "{{ s3_access_key }}"
+s3_secret_key = "{{ s3_secret_key }}"
+akamai_host = "{{ akamai_host }}"
+akamai_client_token = "{{ akamai_client_token }}"
+akamai_client_secret = "{{ akamai_client_secret }}"
+akamai_access_token = "{{ akamai_access_token }}"
+ekv_network = "{{ ekv_network }}"
+ekv_namespace = "{{ ekv_namespace }}"
+ekv_group = "{{ ekv_group }}"
+kv_backend = "{{ kv_backend }}"
+kv_nats_bucket = "{{ kv_nats_bucket }}"
+kv_nats_token = "{{ kv_nats_token }}"
+[component.reconcile-worker.build]
+command = "cargo build -p reconcile-worker --target wasm32-wasip1 --release"
+watch = ["reconcile-worker/src/**/*.rs", "shared/src/**/*.rs"]

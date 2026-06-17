@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VANITY MANAGER // Magnum Edition</title>
+<style>
+  /* ==== late-90s MTV/Zoolander palette ============================== */
+  :root {
+    --hotpink: #ff2d95;
+    --electric: #00f0ff;
+    --yellow:   #ffe500;
+    --lime:     #b6ff00;
+    --purple:   #8a2be2;
+    --black:    #050014;
+    --ink:      #0f0420;
+    --paper:    #fff8e7;
+    --stripe:   repeating-linear-gradient(
+                  135deg,
+                  #ff2d95 0 12px,
+                  #00f0ff 12px 24px);
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Rubik+Mono+One&family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Space Mono', 'Courier New', monospace;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(255,45,149,0.25), transparent 50%),
+      radial-gradient(ellipse at 90% 100%, rgba(0,240,255,0.20), transparent 50%),
+      var(--black);
+    color: var(--paper);
+    min-height: 100vh;
+    padding: 0 1rem 2rem;
+    overflow-x: hidden;
+  }
+
+  /* ==== HEADER with angled banners ================================== */
+  .hero {
+    position: relative;
+    margin: 1rem -1rem 2rem;
+    padding: 2.5rem 1rem 3.5rem;
+    overflow: hidden;
+  }
+  .hero::before, .hero::after {
+    content: '';
+    position: absolute;
+    left: -10%; right: -10%;
+    height: 28px;
+    background: var(--stripe);
+  }
+  .hero::before { top: 0; transform: rotate(-2deg); }
+  .hero::after  { bottom: 0; transform: rotate(1.5deg); }
+
+  .hero h1 {
+    font-family: 'Rubik Mono One', Impact, sans-serif;
+    font-size: clamp(2rem, 7vw, 4.5rem);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--yellow);
+    text-shadow:
+      3px 3px 0 var(--hotpink),
+      6px 6px 0 var(--electric),
+      9px 9px 0 var(--black);
+    transform: rotate(-1.5deg) translateX(-4px);
+    text-align: center;
+    margin-top: 0.5rem;
+  }
+  .hero .tagline {
+    text-align: center;
+    color: var(--electric);
+    margin-top: 0.6rem;
+    font-style: italic;
+    font-size: 0.95rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .mode-badge {
+    position: absolute;
+    top: 1.5rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    background: var(--ink);
+    color: var(--paper);
+    border: 3px solid var(--paper);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.65rem;
+    transform: rotate(3deg);
+    text-transform: uppercase;
+    box-shadow: 4px 4px 0 var(--hotpink);
+  }
+  .mode-badge.magnum {
+    background: var(--electric);
+    color: var(--black);
+    border-color: var(--black);
+    box-shadow: 4px 4px 0 var(--yellow);
+    animation: pulse 1.8s infinite ease-in-out;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: rotate(3deg) scale(1); }
+    50%      { transform: rotate(3deg) scale(1.05); }
+  }
+
+  /* ==== stat cards ================================================== */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .stat {
+    position: relative;
+    background: var(--ink);
+    border: 3px solid var(--paper);
+    padding: 0.9rem 0.75rem;
+    text-align: center;
+    transform: rotate(-0.5deg);
+    box-shadow: 4px 4px 0 var(--hotpink);
+  }
+  .stat:nth-child(even) { transform: rotate(0.8deg); box-shadow: -4px 4px 0 var(--electric); }
+  .stat:nth-child(3n)   { box-shadow: 4px 4px 0 var(--yellow); }
+  .stat .num {
+    font-family: 'Rubik Mono One', Impact, sans-serif;
+    font-size: 2rem;
+    color: var(--yellow);
+    line-height: 1;
+  }
+  .stat .num.warn { color: var(--hotpink); }
+  .stat .num.err  { color: #ff3b3b; }
+  .stat .label {
+    margin-top: 0.25rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--electric);
+  }
+
+  /* ==== sync bar ==================================================== */
+  .syncbar {
+    background: var(--ink);
+    border: 3px solid var(--electric);
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.78rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    transform: rotate(0.3deg);
+  }
+  .syncbar span { color: #c6bde0; }
+  .syncbar b { color: var(--yellow); font-weight: 700; }
+
+  /* ==== tabs ======================================================== */
+  .tabs {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .tab {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.7rem;
+    padding: 0.7rem 1.1rem;
+    background: var(--ink);
+    color: var(--paper);
+    border: 3px solid var(--paper);
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: transform 0.08s;
+  }
+  .tab:hover    { transform: translate(-2px, -2px); }
+  .tab.active   {
+    background: var(--hotpink);
+    color: var(--black);
+    border-color: var(--yellow);
+    box-shadow: 4px 4px 0 var(--electric);
+    transform: translate(-2px, -2px);
+  }
+
+  /* ==== toolbar ===================================================== */
+  .toolbar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .toolbar input, .toolbar select {
+    padding: 0.55rem 0.75rem;
+    background: var(--ink);
+    color: var(--paper);
+    border: 2px solid var(--electric);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+  }
+  .toolbar input { flex: 1; min-width: 220px; }
+  .toolbar .small {
+    color: #c6bde0;
+    font-size: 0.75rem;
+    font-style: italic;
+  }
+
+  button {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    padding: 0.6rem 1rem;
+    border: 3px solid var(--paper);
+    cursor: pointer;
+    transition: transform 0.08s;
+    letter-spacing: 0.06em;
+  }
+  button:hover { transform: translate(-2px, -2px); }
+
+  .btn-primary   { background: var(--yellow); color: var(--black); border-color: var(--black); box-shadow: 3px 3px 0 var(--hotpink); }
+  .btn-danger    { background: #ff3b3b; color: #fff; box-shadow: 3px 3px 0 var(--yellow); }
+  .btn-secondary { background: var(--ink); color: var(--electric); box-shadow: 3px 3px 0 var(--hotpink); }
+  .btn-ghost     { background: transparent; color: var(--paper); border-color: transparent; box-shadow: none; padding: 0.35rem 0.6rem; font-size: 0.56rem; }
+  .btn-ghost:hover { color: var(--yellow); }
+
+  /* ==== tables ====================================================== */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--ink);
+    border: 3px solid var(--yellow);
+    overflow: hidden;
+    font-size: 0.8rem;
+    box-shadow: 6px 6px 0 var(--hotpink);
+  }
+  th {
+    background: var(--hotpink);
+    color: var(--black);
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 3px solid var(--black);
+  }
+  td {
+    padding: 0.5rem 0.75rem;
+    border-top: 1px dashed rgba(0,240,255,0.25);
+    vertical-align: top;
+    color: var(--paper);
+  }
+  tr:hover td { background: rgba(255,229,0,0.06); }
+
+  .badge {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.56rem;
+    letter-spacing: 0.06em;
+    border: 2px solid var(--black);
+  }
+  .badge-301 { background: var(--electric); color: var(--black); }
+  .badge-302 { background: var(--yellow);  color: var(--black); }
+  .badge-307, .badge-308 { background: var(--purple); color: var(--paper); }
+  .badge-on  { background: var(--lime);    color: var(--black); }
+  .badge-off { background: #ff3b3b;        color: #fff; }
+  .badge-synced  { background: var(--lime); color: var(--black); }
+  .badge-pending { background: var(--hotpink); color: var(--black); }
+  .badge-mt      { background: var(--paper); color: var(--black); }
+
+  /* ==== modal ======================================================= */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(5,0,20,0.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-bg.active { display: flex; }
+  .modal {
+    background: var(--paper);
+    color: var(--black);
+    border: 4px solid var(--black);
+    padding: 1.25rem;
+    width: 100%;
+    max-width: 540px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 8px 8px 0 var(--hotpink);
+    transform: rotate(-0.5deg);
+  }
+  .modal h2 {
+    font-family: 'Rubik Mono One', Impact, sans-serif;
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    color: var(--hotpink);
+    text-shadow: 2px 2px 0 var(--electric);
+  }
+  .field { margin-bottom: 0.65rem; }
+  .field label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+    color: var(--ink);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    border: 2px solid var(--black);
+    background: #fff;
+    color: var(--black);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+  }
+  .field textarea { height: 56px; resize: vertical; }
+  .field.inline { display: flex; align-items: center; gap: 0.5rem; }
+  .field.inline label { margin: 0; text-transform: none; letter-spacing: 0; font-size: 0.82rem; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    justify-content: flex-end;
+  }
+  .modal .btn-primary  { background: var(--hotpink); color: #fff; border-color: var(--black); box-shadow: 3px 3px 0 var(--electric); }
+  .modal .btn-secondary { background: var(--black); color: var(--yellow); border-color: var(--black); box-shadow: 3px 3px 0 var(--hotpink); }
+
+  .mono { font-family: 'Space Mono', monospace; font-size: 0.78rem; }
+  .truncate { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+  .empty {
+    text-align: center;
+    padding: 2.5rem;
+    font-family: 'Rubik Mono One', Impact, sans-serif;
+    text-transform: uppercase;
+    color: var(--hotpink);
+    letter-spacing: 0.1em;
+  }
+  .small {
+    font-size: 0.72rem;
+    color: #c6bde0;
+    font-style: italic;
+  }
+
+  #toast {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.65rem 1.2rem;
+    border: 3px solid var(--black);
+    color: var(--black);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.7rem;
+    display: none;
+    z-index: 200;
+    max-width: 420px;
+    box-shadow: 5px 5px 0 var(--hotpink);
+    text-transform: uppercase;
+  }
+
+  /* ====================================================================== */
+  /* PLAIN MODE: overrides triggered by body.plain (cookie or ?zoolander=off) */
+  /* ====================================================================== */
+  body.plain {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                 Helvetica, Arial, sans-serif;
+    background: #f8fafc;
+    color: #0f172a;
+  }
+  body.plain .hero { padding: 1.5rem 1rem 1rem; margin-bottom: 1rem; }
+  body.plain .hero::before, body.plain .hero::after { display: none; }
+  body.plain .hero h1 {
+    font-family: inherit; font-size: 1.75rem; font-weight: 700;
+    text-shadow: none; transform: none; color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+  body.plain .hero .tagline {
+    color: #64748b; font-style: normal; letter-spacing: 0;
+    text-transform: none;
+  }
+  body.plain .mode-badge {
+    background: #e2e8f0; color: #0f172a; border: 1px solid #cbd5e1;
+    box-shadow: none; transform: none; font-family: inherit;
+    font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+    padding: 0.3rem 0.6rem; border-radius: 4px;
+  }
+  body.plain .mode-badge.magnum {
+    background: #2563eb; color: #fff; border-color: #1e3a8a;
+    animation: none;
+  }
+  body.plain .stat {
+    background: #fff; border: 1px solid #cbd5e1; box-shadow: none;
+    transform: none;
+  }
+  body.plain .stat .num {
+    font-family: inherit; color: #0f172a; font-weight: 700;
+  }
+  body.plain .stat .num.warn { color: #ca8a04; }
+  body.plain .stat .num.err { color: #dc2626; }
+  body.plain .stat .label { color: #64748b; }
+  body.plain .syncbar {
+    background: #fff; border: 1px solid #cbd5e1; transform: none;
+  }
+  body.plain .syncbar span { color: #64748b; }
+  body.plain .syncbar b { color: #0f172a; }
+  body.plain .tabs { border-bottom: 1px solid #cbd5e1; }
+  body.plain .tab {
+    background: transparent; color: #475569; border: none;
+    border-bottom: 2px solid transparent;
+    font-family: inherit; font-size: 0.85rem; text-transform: none;
+    padding: 0.6rem 1rem; box-shadow: none;
+  }
+  body.plain .tab:hover { transform: none; color: #0f172a; }
+  body.plain .tab.active {
+    background: transparent; color: #2563eb; border-color: #2563eb;
+    box-shadow: none;
+  }
+  body.plain .toolbar input, body.plain .toolbar select {
+    background: #fff; color: #0f172a; border: 1px solid #cbd5e1;
+    font-family: inherit;
+  }
+  body.plain button {
+    font-family: inherit; font-size: 0.85rem; text-transform: none;
+    border: 1px solid #cbd5e1; padding: 0.45rem 0.9rem;
+    border-radius: 6px; letter-spacing: 0;
+  }
+  body.plain button:hover { transform: none; }
+  body.plain .btn-primary {
+    background: #2563eb; color: #fff; border-color: #1e40af;
+    box-shadow: none;
+  }
+  body.plain .btn-secondary {
+    background: #fff; color: #0f172a; border-color: #cbd5e1;
+    box-shadow: none;
+  }
+  body.plain .btn-danger {
+    background: #dc2626; color: #fff; border-color: #b91c1c;
+    box-shadow: none;
+  }
+  body.plain .btn-ghost {
+    background: transparent; color: #475569; border-color: transparent;
+    font-size: 0.8rem;
+  }
+  body.plain .btn-ghost:hover { color: #2563eb; }
+  body.plain table {
+    background: #fff; border: 1px solid #cbd5e1; box-shadow: none;
+    font-size: 0.85rem;
+  }
+  body.plain th {
+    background: #f1f5f9; color: #475569; font-family: inherit;
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em;
+    border-bottom: 1px solid #cbd5e1;
+  }
+  body.plain td {
+    color: #0f172a; border-top: 1px solid #e2e8f0;
+  }
+  body.plain tr:hover td { background: #f8fafc; }
+  body.plain .badge {
+    font-family: inherit; font-size: 0.7rem; font-weight: 600;
+    border: none; padding: 0.15rem 0.5rem; border-radius: 999px;
+  }
+  body.plain .badge-301 { background: #dbeafe; color: #1e40af; }
+  body.plain .badge-302 { background: #fef3c7; color: #92400e; }
+  body.plain .badge-307, body.plain .badge-308 {
+    background: #f3e8ff; color: #6b21a8;
+  }
+  body.plain .badge-on { background: #dcfce7; color: #166534; }
+  body.plain .badge-off { background: #fee2e2; color: #991b1b; }
+  body.plain .badge-synced { background: #dcfce7; color: #166534; }
+  body.plain .badge-pending { background: #fef3c7; color: #92400e; }
+  body.plain .badge-mt { background: #f1f5f9; color: #475569; }
+  body.plain .modal {
+    background: #fff; color: #0f172a; border: 1px solid #cbd5e1;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15); transform: none;
+  }
+  body.plain .modal h2 {
+    font-family: inherit; font-size: 1.15rem; font-weight: 600;
+    color: #0f172a; text-shadow: none; text-transform: none;
+  }
+  body.plain .modal .btn-primary {
+    background: #2563eb; color: #fff; border-color: #1e40af;
+    box-shadow: none;
+  }
+  body.plain .modal .btn-secondary {
+    background: #fff; color: #0f172a; border-color: #cbd5e1;
+    box-shadow: none;
+  }
+  body.plain .field label {
+    color: #475569; text-transform: none; letter-spacing: 0;
+    font-size: 0.78rem; font-weight: 500;
+  }
+  body.plain .field input, body.plain .field select, body.plain .field textarea {
+    border: 1px solid #cbd5e1; background: #fff;
+  }
+  body.plain #toast {
+    background: #22c55e; color: #fff; border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-transform: none;
+    font-family: inherit; font-size: 0.85rem; font-weight: 500;
+    padding: 0.6rem 1rem; border-radius: 6px;
+  }
+  body.plain #auth-banner {
+    font-family: inherit; font-size: 0.85rem; text-transform: none;
+    background: #fef2f2; color: #991b1b; border: 1px solid #fecaca;
+    box-shadow: none;
+  }
+  /* style-toggle button (small, top-right inside hero) */
+  .style-toggle {
+    position: fixed; top: 0.5rem; right: 0.5rem;
+    background: rgba(255,255,255,0.1); color: var(--paper);
+    border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;
+    padding: 0.3rem 0.6rem; font-size: 0.7rem;
+    font-family: 'Space Mono', monospace; text-decoration: none;
+    z-index: 50;
+  }
+  body.plain .style-toggle {
+    background: #fff; color: #475569; border-color: #cbd5e1;
+    font-family: inherit;
+  }
+</style>
+</head>
+<body>
+
+<a class="style-toggle" id="styleToggle" href="#">style: zoolander</a>
+
+<div class="hero">
+  <div class="mode-badge" id="modeBadge">VANITY MODE</div>
+  <h1>Vanity Manager</h1>
+  <div class="tagline">Really, really, ridiculously good-looking redirects</div>
+</div>
+
+<div id="auth-banner" style="display:none; background:#ff3b3b; color:#fff; padding:0.8rem 1rem; margin-bottom:1rem; border:3px solid #050014; box-shadow:4px 4px 0 #ffe500; font-family:'Press Start 2P',monospace; font-size:0.7rem; text-transform:uppercase; text-align:center;">
+  <span id="auth-banner-msg"></span>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="syncbar" id="syncbar"></div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="rules" onclick="switchTab('rules')">The Rules</button>
+  <button class="tab" data-tab="hosts" onclick="switchTab('hosts')">The Hosts</button>
+  <button class="tab" data-tab="pending" onclick="switchTab('pending')">Sync Queue</button>
+  <button class="tab" data-tab="loadtest" onclick="switchTab('loadtest')">Load Test</button>
+  <button class="tab" data-tab="verify" onclick="switchTab('verify')">Verify</button>
+  <a class="tab" id="link-docs" href="/api/v1/docs">API Docs</a>
+  <a class="tab" id="link-readme" href="/api/v1/readme">Architecture</a>
+  <a class="tab" id="link-gh" href="https://github.com/ccie7599/vanity-manager" target="_blank" rel="noopener">Source ↗</a>
+</div>
+
+<!-- ============== RULES TAB ============== -->
+<div id="tab-rules">
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Filter host / path / target / notes...">
+    <select id="hostFilter"><option value="">All Hosts</option></select>
+    <button class="btn-primary" onclick="openAddRule()">+ Rule</button>
+    <button class="btn-secondary" onclick="exportAll()">Export</button>
+    <label class="btn-secondary" style="cursor:pointer; padding:0.6rem 1rem; display:inline-block">
+      Import <input type="file" accept=".json" id="importFile" style="display:none" onchange="importFile(event)">
+    </label>
+  </div>
+  <div id="rules-pager" class="small" style="display:flex; align-items:center; gap:0.4em; margin: 0.5rem 0;"></div>
+  <table>
+    <thead><tr>
+      <th>Host</th><th>Type</th><th>Path</th><th>Target</th><th>Code</th>
+      <th>Flags</th><th>Status</th><th>Sync</th><th></th>
+    </tr></thead>
+    <tbody id="rules-tbody"></tbody>
+  </table>
+</div>
+
+<!-- ============== HOSTS TAB ============== -->
+<div id="tab-hosts" style="display:none">
+  <div class="toolbar">
+    <span class="small">Host-level settings (case sensitivity, enabled flag). Rules inherit these.</span>
+  </div>
+  <table>
+    <thead><tr>
+      <th>Host</th><th>Enabled</th><th>Case</th><th>Rules</th><th>Updated</th><th>Sync</th><th></th>
+    </tr></thead>
+    <tbody id="hosts-tbody"></tbody>
+  </table>
+</div>
+
+<!-- ============== PENDING TAB ============== -->
+<div id="tab-pending" style="display:none">
+  <div class="toolbar">
+    <span class="small">EdgeKV push retries. Queued on write-through failure, drained by reconcile + beacon traffic.</span>
+    <button class="btn-secondary" onclick="triggerDrain()">Drain Now</button>
+    <button class="btn-secondary" onclick="triggerClearPending()" title="Bulk-delete markers without pushing to EdgeKV. Use when EKV is already in sync (e.g. after running Verify against scratch hosts that nothing reads).">Clear Markers</button>
+  </div>
+  <table>
+    <thead><tr>
+      <th>Target</th><th>Attempts</th><th>Queued</th><th>Last Error</th>
+    </tr></thead>
+    <tbody id="pending-tbody"></tbody>
+  </table>
+</div>
+
+<!-- ============== LOAD TEST TAB ============== -->
+<div id="tab-loadtest" style="display:none">
+  <div class="toolbar" style="flex-wrap:wrap; gap:0.6rem;">
+    <div class="field" style="margin:0">
+      <label class="small">Target host</label>
+      <input id="ltHost" placeholder="redirects.example.com" style="min-width:18em">
+    </div>
+    <div class="field" style="margin:0">
+      <label class="small">Rate (req/s)</label>
+      <input id="ltRate" type="number" min="1" max="200" value="20" style="width:6em">
+    </div>
+    <div class="field" style="margin:0">
+      <label class="small">Duration (s)</label>
+      <input id="ltDur" type="number" min="1" max="300" value="20" style="width:6em">
+    </div>
+    <div class="field" style="margin:0">
+      <label class="small">Sample size</label>
+      <input id="ltSample" type="number" min="10" max="500" value="100" style="width:6em">
+    </div>
+    <button id="ltStart" class="btn-primary" onclick="ltStart()">Start Load</button>
+    <button id="ltStop" class="btn-secondary" onclick="ltStop()" disabled>Stop</button>
+    <button class="btn-secondary" onclick="ltProbe()">Probe One →</button>
+  </div>
+    <div class="small" style="margin: 0.4rem 0 0.8rem 0; opacity: 0.8;">
+      Fires <code>fetch()</code> from your browser against the live property using
+      <code>redirect: 'error'</code> so the browser stops at the 301 instead of chasing it to
+      the downstream target. Latency = browser↔nearest Akamai PoP round-trip + edge handler
+      time. EdgeWorker compute itself is sub-millisecond (see
+      <code>Server-Timing: ew;dur=…</code> on any redirect via curl/DevTools).
+      Vegeta from a co-located VM shows p99 ≈ 130 ms — see
+      <code>docs/loadtest-2026-04-30/report.md</code>.
+    </div>
+
+  <div class="row" style="gap:0.8rem;">
+    <div class="field" style="flex:1; min-width:18em">
+      <label class="small">Live stats</label>
+      <div id="ltStats" style="font-family: ui-monospace,monospace; font-size:0.95em; line-height:1.5em;">
+        <em>idle</em>
+      </div>
+    </div>
+    <div class="field" style="flex:2; min-width:24em">
+      <label class="small">TTFB histogram (server-side 301 response time, ms)</label>
+      <div id="ltHist"></div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="small">Recent requests</label>
+    <table style="width:100%">
+      <thead><tr>
+        <th style="width:7em">t (ms)</th>
+        <th style="width:7em">Latency (ms)</th>
+        <th style="width:5em">Status</th>
+        <th>URL</th>
+      </tr></thead>
+      <tbody id="ltRecent"></tbody>
+    </table>
+  </div>
+
+  <div class="modal-bg" id="ltProbeModal" onclick="if(event.target===this)closeModal('ltProbeModal')">
+    <div class="modal" style="max-width:60em">
+      <h2>Probe Result</h2>
+      <pre id="ltProbeOut" style="font-family: ui-monospace,monospace; font-size:0.85em; white-space:pre-wrap; max-height:60vh; overflow:auto"></pre>
+      <div style="text-align:right">
+        <button class="btn-secondary" onclick="closeModal('ltProbeModal')">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============== VERIFY TAB ============== -->
+<div id="tab-verify" style="display:none">
+  <div class="toolbar" style="flex-wrap:wrap; gap:0.6rem;">
+    <button id="vfyRun" class="btn-primary" onclick="vfyRunAll()">Run all tests</button>
+    <span id="vfyStatus" class="small" style="opacity:0.85"></span>
+  </div>
+  <div class="small" style="margin: 0.4rem 0 0.8rem 0; opacity: 0.85;">
+    End-to-end functional tests against this admin API. Each test creates,
+    queries, mutates, and deletes its own scratch rules under the synthetic host
+    <code>vfy-&lt;ts&gt;-&lt;n&gt;.example.invalid</code> — production data is never
+    touched. Pass means the API behaved as documented in the OpenAPI spec.
+  </div>
+
+  <div id="vfySummary"></div>
+
+  <table id="vfyTable">
+    <thead><tr>
+      <th style="width:38%">Test</th>
+      <th style="width:6em">Status</th>
+      <th>Detail</th>
+      <th style="width:6em; text-align:right">Latency</th>
+    </tr></thead>
+    <tbody id="vfyRows"></tbody>
+  </table>
+</div>
+
+<!-- ============== RULE MODAL ============== -->
+<div class="modal-bg" id="ruleModal" onclick="if(event.target===this)closeModal('ruleModal')">
+  <div class="modal">
+    <h2 id="ruleModalTitle">Strike a Pose</h2>
+    <input type="hidden" id="ruleEditing">
+    <div class="row">
+      <div class="field"><label>Source Host</label><input id="fHost" placeholder="old-brand.example.com"></div>
+      <div class="field"><label>Match Type</label>
+        <select id="fMatch"><option value="exact">exact</option><option value="prefix">prefix</option></select></div>
+    </div>
+    <div class="field"><label>Source Path</label><input id="fPath" value="/" placeholder="/mortgage"></div>
+    <div class="field"><label>Target URL</label><input id="fTarget" placeholder="https://new-site.com/page"></div>
+    <div class="row">
+      <div class="field"><label>Status Code</label>
+        <select id="fStatus">
+          <option value="301">301 — Blue Steel (permanent)</option>
+          <option value="302">302 — Le Tigre (temporary)</option>
+          <option value="307">307 — Ferrari (temp, keep method)</option>
+          <option value="308">308 — Locked (perm, keep method)</option>
+        </select></div>
+      <div class="field"><label>Priority</label><input type="number" id="fPriority" value="0"></div>
+    </div>
+    <div class="row">
+      <div class="field inline"><input type="checkbox" id="fPreservePath"><label>Preserve path suffix</label></div>
+      <div class="field inline"><input type="checkbox" id="fPreserveQuery" checked><label>Preserve query string</label></div>
+    </div>
+    <div class="row">
+      <div class="field inline"><input type="checkbox" id="fEnabled" checked><label>Enabled</label></div>
+      <div class="field inline"><input type="checkbox" id="fCaseInsensitive"><label>Case-insensitive (flips host)</label></div>
+    </div>
+    <div class="small">CI applies to the whole host. Saving with CI on flips the host's case_sensitive flag and lowercases this rule's path on store.</div>
+    <div class="field"><label>Notes</label><textarea id="fNotes"></textarea></div>
+    <div class="actions">
+      <button class="btn-secondary" onclick="closeModal('ruleModal')">Cancel</button>
+      <button class="btn-primary" onclick="saveRule()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== HOST MODAL ============== -->
+<div class="modal-bg" id="hostModal" onclick="if(event.target===this)closeModal('hostModal')">
+  <div class="modal">
+    <h2>Edit Host</h2>
+    <input type="hidden" id="hostEditing">
+    <div class="field"><label>Host</label><input id="hHost" readonly></div>
+    <div class="field inline"><input type="checkbox" id="hEnabled"><label>Enabled</label></div>
+    <div class="field inline"><input type="checkbox" id="hCaseSensitive"><label>Case-sensitive path matching</label></div>
+    <div class="small">When off, the EdgeWorker lowercases the request path before lookup. Affects all rules on this host.</div>
+    <div class="actions">
+      <button class="btn-secondary" onclick="closeModal('hostModal')">Cancel</button>
+      <button class="btn-primary" onclick="saveHost()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// Accept ?token= (primary) or ?auth= (landing-zone alias) — matches the
+// token pattern used by project-demo-catalog-landingzone.
+const TOKEN =
+  new URLSearchParams(window.location.search).get('token') ||
+  new URLSearchParams(window.location.search).get('auth') ||
+  '';
+const API = '/api/v1';
+let allRules = [];
+let matchedTotal = 0;
+let allHosts = [];
+
+function showAuthBanner(msg) {
+  const b = document.getElementById('auth-banner');
+  document.getElementById('auth-banner-msg').textContent = msg;
+  b.style.display = 'block';
+}
+
+function qs(path) {
+  return path + (path.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(TOKEN);
+}
+
+async function api(path, opts = {}) {
+  if (!TOKEN) {
+    showAuthBanner('Missing token — append ?token=<value> to the URL');
+    throw new Error('missing token');
+  }
+  const resp = await fetch(API + qs(path), {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  });
+  if (resp.status === 401 || resp.status === 403) {
+    showAuthBanner('Invalid or expired token');
+    throw new Error('unauthorized');
+  }
+  if (!resp.ok && resp.status !== 200 && resp.status !== 201) {
+    const body = await resp.text();
+    throw new Error(body || resp.statusText);
+  }
+  return resp.json();
+}
+
+function toast(msg, ok = true) {
+  const t = document.getElementById('toast');
+  t.style.background = ok ? 'var(--lime)' : '#ff3b3b';
+  t.style.color = ok ? 'var(--black)' : '#fff';
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => (t.style.display = 'none'), 3000);
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t) =>
+    t.classList.toggle('active', t.dataset.tab === name)
+  );
+  ['rules', 'hosts', 'pending', 'loadtest', 'verify'].forEach((t) => {
+    document.getElementById('tab-' + t).style.display = t === name ? '' : 'none';
+  });
+  if (name === 'pending') loadPending();
+  if (name === 'hosts') loadHostsTable();
+  if (name === 'loadtest') ltOnTabOpen();
+  if (name === 'verify') vfyOnTabOpen();
+}
+
+// ---------------------------------------------------------------------------
+// Mode detection: at least one EdgeKV push succeeded = the EW data plane
+// is live = MAGNUM MODE. Without EKV pushes (e.g. running purely against
+// Functions in dev), the badge stays VANITY MODE.
+// ---------------------------------------------------------------------------
+
+function updateMode(syncStats) {
+  const badge = document.getElementById('modeBadge');
+  const isPlain = document.body.classList.contains('plain');
+  if ((syncStats.ekv_pushes_total || 0) > 0) {
+    badge.textContent = isPlain ? 'FORWARD-DEPLOYED' : 'MAGNUM';
+    badge.classList.add('magnum');
+  } else {
+    badge.textContent = isPlain ? 'FUNCTIONS-ONLY' : 'VANITY MODE';
+    badge.classList.remove('magnum');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Style toggle: ?zoolander=off OR cookie vm-style=plain → plain palette
+// Persists via cookie so navigation across UI/docs/readme keeps the choice.
+// ---------------------------------------------------------------------------
+(function () {
+  const u = new URLSearchParams(location.search);
+  const param = (u.get('zoolander') || u.get('style') || '').toLowerCase();
+  const cookieIsZoo = document.cookie.split(';').some(
+    (c) => c.trim() === 'vm-style=zoolander'
+  );
+  let isZoo;
+  if (param === 'on' || param === '1' || param === 'true' || param === 'zoolander') {
+    isZoo = true;
+    document.cookie = 'vm-style=zoolander; Path=/; Max-Age=2592000; SameSite=Lax';
+  } else if (param === 'off' || param === '0' || param === 'false' || param === 'plain') {
+    isZoo = false;
+    document.cookie = 'vm-style=; Path=/; Max-Age=0; SameSite=Lax';
+  } else {
+    isZoo = cookieIsZoo;
+  }
+  const isPlain = !isZoo;
+  if (isPlain) document.body.classList.add('plain');
+
+  const labelSwaps = {
+    'The Rules': 'Rules',
+    'The Hosts': 'Hosts',
+    'Sync Queue': 'Sync queue',
+    'Strike A Pose': 'Add rule',
+    'Tweak A Pose': 'Edit rule',
+  };
+  if (isPlain) {
+    document.title = 'Vanity Manager';
+    // Tabs
+    document.querySelectorAll('.tab').forEach((t) => {
+      if (labelSwaps[t.textContent]) t.textContent = labelSwaps[t.textContent];
+    });
+    // Status code dropdown nicknames → plain RFC labels
+    const fStatus = document.getElementById('fStatus');
+    if (fStatus) {
+      const labels = {
+        '301': '301 — Permanent',
+        '302': '302 — Temporary',
+        '307': '307 — Temporary, preserve method',
+        '308': '308 — Permanent, preserve method',
+      };
+      [...fStatus.options].forEach((o) => {
+        if (labels[o.value]) o.textContent = labels[o.value];
+      });
+    }
+    // Modal title is set dynamically in openAdd/openEdit; intercept those
+    // by post-hooking on click rather than overriding.
+    const origOpenAdd = window.openAddRule;
+    window.openAddRule = function () {
+      origOpenAdd();
+      document.getElementById('ruleModalTitle').textContent = 'Add rule';
+    };
+    const origOpenEdit = window.openEditRule;
+    window.openEditRule = function (r) {
+      origOpenEdit(r);
+      document.getElementById('ruleModalTitle').textContent = 'Edit rule';
+    };
+  }
+
+  // Toggle link
+  const toggle = document.getElementById('styleToggle');
+  if (toggle) {
+    toggle.textContent = isZoo ? 'style: zoolander' : 'style: plain';
+    toggle.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      const u = new URL(location.href);
+      u.searchParams.set('zoolander', isZoo ? 'off' : 'on');
+      location.href = u.toString();
+    });
+  }
+})();
+
+// ---------------------------------------------------------------------------
+// Loaders
+// ---------------------------------------------------------------------------
+
+async function refresh() {
+  loadStats();
+  loadHosts();
+  loadRules();
+}
+
+async function loadStats() {
+  try {
+    const s = await api('/stats');
+    document.getElementById('stats').innerHTML = `
+      <div class="stat"><div class="num">${s.total_rules}</div><div class="label">Rules</div></div>
+      <div class="stat"><div class="num">${s.enabled}</div><div class="label">Enabled</div></div>
+      <div class="stat"><div class="num ${s.disabled ? 'warn' : ''}">${s.disabled}</div><div class="label">Disabled</div></div>
+      <div class="stat"><div class="num">${s.unique_hosts}</div><div class="label">Hosts</div></div>
+      <div class="stat"><div class="num ${s.sync.pending_ekv_pushes ? 'warn' : ''}">${s.sync.pending_ekv_pushes}</div><div class="label">Pending</div></div>`;
+    const sy = s.sync;
+    document.getElementById('syncbar').innerHTML = `
+      <span>Last EKV push <b>${sy.last_ekv_push_at ? sy.last_ekv_push_at.split('.')[0].replace('T',' ') : '—'}</b></span>
+      <span>Last snapshot <b>${sy.last_snapshot_at ? sy.last_snapshot_at.split('.')[0].replace('T',' ') : '—'}</b></span>
+      <span>Pushes <b>${sy.ekv_pushes_total}</b></span>
+      <span>Errors <b>${sy.ekv_errors_total}</b></span>
+      <span>Drained <b>${sy.pending_drained_total}</b></span>`;
+    updateMode(sy);
+  } catch (e) {
+    toast('stats error: ' + e.message, false);
+  }
+}
+
+async function loadHosts() {
+  allHosts = await api('/hosts');
+  const sel = document.getElementById('hostFilter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Hosts</option>';
+  allHosts.forEach((h) => {
+    const o = document.createElement('option');
+    o.value = h.host;
+    o.textContent = `${h.host} (${h.rule_count})`;
+    sel.appendChild(o);
+  });
+  sel.value = cur;
+}
+
+async function loadHostsTable() {
+  const tbody = document.getElementById('hosts-tbody');
+  if (!allHosts.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">No hosts yet. Add rules to populate.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = allHosts
+    .map(
+      (h) => `<tr>
+    <td class="mono">${esc(h.host)}</td>
+    <td><span class="badge ${h.enabled ? 'badge-on' : 'badge-off'}">${h.enabled ? 'ON' : 'OFF'}</span></td>
+    <td><span class="badge ${h.case_sensitive ? 'badge-on' : 'badge-off'}">${h.case_sensitive ? 'CS' : 'CI'}</span></td>
+    <td>${h.rule_count}</td>
+    <td class="small">${esc((h.updated_at || '').split('T')[0])}</td>
+    <td>${h.ekv_synced_at ? '<span class="badge badge-synced">SYNCED</span>' : '<span class="badge badge-pending">PENDING</span>'}</td>
+    <td><button class="btn-ghost" onclick='openEditHost(${JSON.stringify(h)})'>Edit</button></td>
+  </tr>`
+    )
+    .join('');
+}
+
+let rulesOffset = 0;
+const RULES_PAGE_SIZE = 200;
+
+async function loadRules(offsetOverride) {
+  if (typeof offsetOverride === 'number') rulesOffset = Math.max(0, offsetOverride);
+  const hostFilter = document.getElementById('hostFilter').value;
+  const params = new URLSearchParams();
+  if (hostFilter) params.set('host', hostFilter);
+  params.set('limit', RULES_PAGE_SIZE);
+  params.set('offset', rulesOffset);
+  const r = await api('/rules?' + params.toString());
+  if (Array.isArray(r)) {
+    allRules = r;
+    matchedTotal = r.length;
+  } else {
+    allRules = r.items || [];
+    matchedTotal = r.matched_total || allRules.length;
+  }
+  renderRules();
+}
+
+function renderRules() {
+  const filter = document.getElementById('search').value.toLowerCase();
+  // Client-side filter only operates over the current page. Use the host
+  // filter for cross-page filtering.
+  const rows = allRules.filter(
+    (r) =>
+      !filter ||
+      r.host.toLowerCase().includes(filter) ||
+      r.path.toLowerCase().includes(filter) ||
+      r.target_url.toLowerCase().includes(filter) ||
+      (r.notes || '').toLowerCase().includes(filter)
+  );
+  // Pagination header
+  const pager = document.getElementById('rules-pager');
+  if (pager) {
+    const start = matchedTotal === 0 ? 0 : rulesOffset + 1;
+    const end = Math.min(rulesOffset + allRules.length, matchedTotal);
+    const hasPrev = rulesOffset > 0;
+    const hasNext = rulesOffset + RULES_PAGE_SIZE < matchedTotal;
+    pager.innerHTML =
+      `<span style="margin-right:0.8em">Showing <b>${start.toLocaleString()}</b>` +
+      `–<b>${end.toLocaleString()}</b> of <b>${matchedTotal.toLocaleString()}</b></span>` +
+      `<button class="btn-ghost" ${hasPrev ? '' : 'disabled'} onclick="loadRules(${rulesOffset - RULES_PAGE_SIZE})">‹ Prev</button>` +
+      `<button class="btn-ghost" ${hasNext ? '' : 'disabled'} onclick="loadRules(${rulesOffset + RULES_PAGE_SIZE})">Next ›</button>`;
+  }
+  const tbody = document.getElementById('rules-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">No rules. Add one or import JSON.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows
+    .map(
+      (r) => `<tr>
+    <td class="mono">${esc(r.host)}</td>
+    <td><span class="badge badge-mt">${r.match_type}</span></td>
+    <td class="mono">${esc(r.path)}</td>
+    <td class="mono"><span class="truncate" title="${esc(r.target_url)}">${esc(r.target_url)}</span></td>
+    <td><span class="badge badge-${r.status_code}">${r.status_code}</span></td>
+    <td class="small">${r.preserve_path ? '+path ' : ''}${r.preserve_query ? '+query' : ''}</td>
+    <td><span class="badge ${r.enabled ? 'badge-on' : 'badge-off'}">${r.enabled ? 'ON' : 'OFF'}</span></td>
+    <td>${r.ekv_synced_at ? '<span class="badge badge-synced">SYNCED</span>' : '<span class="badge badge-pending">PENDING</span>'}</td>
+    <td>
+      <button class="btn-ghost" onclick='openEditRule(${JSON.stringify(r)})'>Edit</button>
+      <button class="btn-ghost" style="color:#ff3b3b" onclick="delRule(${JSON.stringify(r.host)}, ${JSON.stringify(r.match_type)}, ${JSON.stringify(r.path)})">X</button>
+    </td>
+  </tr>`
+    )
+    .join('');
+}
+
+async function loadPending() {
+  const tbody = document.getElementById('pending-tbody');
+  try {
+    const items = await api('/pending');
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty">Sync queue empty — all good</td></tr>';
+      return;
+    }
+    tbody.innerHTML = items
+      .map(
+        (p) => `<tr>
+      <td class="mono">${esc(p.target)}</td>
+      <td>${p.attempts || 0}</td>
+      <td class="small">${esc((p.queued_at || '').split('.')[0].replace('T',' '))}</td>
+      <td class="small">${esc((p.last_error_at || '—').split('.')[0].replace('T',' '))}</td>
+    </tr>`
+      )
+      .join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="4" class="empty">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function triggerDrain() {
+  try {
+    const resp = await fetch('/_reconcile/drain', { method: 'POST' });
+    if (!resp.ok) {
+      // 500 here is usually the 30s Functions wall-clock from prefix-rule
+      // markers triggering full host-manifest rebuilds. Surface the hint.
+      const body = await resp.text();
+      const hint = resp.status === 500
+        ? ' — drain timed out at 30s. If these markers are from Verify scratch hosts, click "Clear Markers" instead (no EKV writes).'
+        : '';
+      toast(`drain failed (HTTP ${resp.status})${hint}`, false);
+      return;
+    }
+    const r = await resp.json();
+    toast(`Drained ${r.drained} / ${r.drained + r.errors}`, r.errors === 0);
+    loadPending();
+    loadStats();
+  } catch (e) {
+    toast('drain failed: ' + e.message, false);
+  }
+}
+
+async function triggerClearPending() {
+  try {
+    const url = '/api/v1/clear-pending?budget=2000&token=' + encodeURIComponent(authToken());
+    const r = await fetch(url, { method: 'POST' }).then((x) => x.json());
+    toast(`Cleared ${r.deleted} markers (${r.remaining} remaining)`, r.errors === 0);
+    loadPending();
+    loadStats();
+  } catch (e) {
+    toast('clear failed: ' + e.message, false);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Rule modal
+// ---------------------------------------------------------------------------
+
+function openAddRule() {
+  document.getElementById('ruleModalTitle').textContent = 'Strike A Pose';
+  document.getElementById('ruleEditing').value = '';
+  ['fHost', 'fTarget', 'fNotes'].forEach((id) => (document.getElementById(id).value = ''));
+  document.getElementById('fPath').value = '/';
+  document.getElementById('fStatus').value = '301';
+  document.getElementById('fMatch').value = 'exact';
+  document.getElementById('fPreservePath').checked = false;
+  document.getElementById('fPreserveQuery').checked = true;
+  document.getElementById('fPriority').value = '0';
+  document.getElementById('fEnabled').checked = true;
+  document.getElementById('fCaseInsensitive').checked = false;
+  document.getElementById('fHost').disabled = false;
+  document.getElementById('fMatch').disabled = false;
+  document.getElementById('fPath').disabled = false;
+  document.getElementById('ruleModal').classList.add('active');
+}
+
+function openEditRule(r) {
+  document.getElementById('ruleModalTitle').textContent = 'Tweak A Pose';
+  document.getElementById('ruleEditing').value = JSON.stringify({
+    host: r.host,
+    type: r.match_type,
+    path: r.path,
+  });
+  document.getElementById('fHost').value = r.host;
+  document.getElementById('fMatch').value = r.match_type;
+  document.getElementById('fPath').value = r.path;
+  document.getElementById('fTarget').value = r.target_url;
+  document.getElementById('fStatus').value = r.status_code;
+  document.getElementById('fPreservePath').checked = r.preserve_path;
+  document.getElementById('fPreserveQuery').checked = r.preserve_query;
+  document.getElementById('fPriority').value = r.priority;
+  document.getElementById('fEnabled').checked = r.enabled;
+  // ci is host-scoped on read; check the checkbox if the rule's host is ci
+  const hostMeta = (allHosts || []).find((h) => h.host === r.host);
+  document.getElementById('fCaseInsensitive').checked =
+    hostMeta ? hostMeta.case_sensitive === false : false;
+  document.getElementById('fNotes').value = r.notes || '';
+  document.getElementById('fHost').disabled = true;
+  document.getElementById('fMatch').disabled = true;
+  document.getElementById('fPath').disabled = true;
+  document.getElementById('ruleModal').classList.add('active');
+}
+
+async function saveRule() {
+  const editingRaw = document.getElementById('ruleEditing').value;
+  const body = {
+    host: document.getElementById('fHost').value,
+    path: document.getElementById('fPath').value || '/',
+    target_url: document.getElementById('fTarget').value,
+    status_code: parseInt(document.getElementById('fStatus').value),
+    match_type: document.getElementById('fMatch').value,
+    preserve_path: document.getElementById('fPreservePath').checked,
+    preserve_query: document.getElementById('fPreserveQuery').checked,
+    priority: parseInt(document.getElementById('fPriority').value) || 0,
+    enabled: document.getElementById('fEnabled').checked,
+    case_insensitive: document.getElementById('fCaseInsensitive').checked,
+    notes: document.getElementById('fNotes').value,
+  };
+  try {
+    if (editingRaw) {
+      const k = JSON.parse(editingRaw);
+      await api(`/rules/${encodeURIComponent(k.host)}/${k.type}${encodePath(k.path)}`, {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      });
+      toast('Rule updated');
+    } else {
+      await api('/rules', { method: 'POST', body: JSON.stringify(body) });
+      toast('Rule created');
+    }
+    closeModal('ruleModal');
+    refresh();
+  } catch (e) {
+    toast('error: ' + e.message, false);
+  }
+}
+
+async function delRule(host, type, path) {
+  if (!confirm(`Delete ${host} ${type} ${path}?`)) return;
+  try {
+    await api(`/rules/${encodeURIComponent(host)}/${type}${encodePath(path)}`, {
+      method: 'DELETE',
+    });
+    toast('Deleted');
+    refresh();
+  } catch (e) {
+    toast('delete failed: ' + e.message, false);
+  }
+}
+
+function encodePath(p) {
+  return p
+    .split('/')
+    .map((seg, i) => (i === 0 ? '' : encodeURIComponent(seg)))
+    .join('/');
+}
+
+// ---------------------------------------------------------------------------
+// Host modal
+// ---------------------------------------------------------------------------
+
+function openEditHost(h) {
+  document.getElementById('hostEditing').value = h.host;
+  document.getElementById('hHost').value = h.host;
+  document.getElementById('hEnabled').checked = h.enabled;
+  document.getElementById('hCaseSensitive').checked = h.case_sensitive;
+  document.getElementById('hostModal').classList.add('active');
+}
+
+async function saveHost() {
+  const host = document.getElementById('hostEditing').value;
+  const body = {
+    host,
+    enabled: document.getElementById('hEnabled').checked,
+    case_sensitive: document.getElementById('hCaseSensitive').checked,
+  };
+  try {
+    await api(`/hosts/${encodeURIComponent(host)}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    });
+    toast('Host updated');
+    closeModal('hostModal');
+    refresh();
+    loadHostsTable();
+  } catch (e) {
+    toast('error: ' + e.message, false);
+  }
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+// ---------------------------------------------------------------------------
+// Import / export
+// ---------------------------------------------------------------------------
+
+async function exportAll() {
+  try {
+    const data = await api('/export');
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'vanity-manager-export.json';
+    a.click();
+  } catch (e) {
+    toast('export failed: ' + e.message, false);
+  }
+}
+
+async function importFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  try {
+    const r = await api('/import', { method: 'POST', body: text });
+    toast(`Imported ${r.imported} / ${r.total}` + (r.errors.length ? ` (${r.errors.length} err)` : ''));
+    refresh();
+  } catch (e) {
+    toast('import failed: ' + e.message, false);
+  }
+  event.target.value = '';
+}
+
+document.getElementById('search').addEventListener('input', renderRules);
+document.getElementById('hostFilter').addEventListener('change', loadRules);
+
+// stamp ?token= and ?zoolander=on onto the doc links so style + auth carry over
+(function () {
+  const isZoo = !document.body.classList.contains('plain');
+  const params = [];
+  if (TOKEN) params.push('token=' + encodeURIComponent(TOKEN));
+  if (isZoo) params.push('zoolander=on');
+  const qs = params.length ? '?' + params.join('&') : '';
+  ['link-docs', 'link-readme'].forEach((id) => {
+    const a = document.getElementById(id);
+    if (a && qs) a.href = a.getAttribute('href') + qs;
+  });
+})();
+
+refresh();
+setInterval(loadStats, 5000);
+
+// ===========================================================================
+// Load Test rig — fires fetch() against the live property from the browser,
+// captures end-to-end latencies. Same-origin: yes (we're on the Akamai
+// property's compute path). Cross-origin to the redirect host: no — uses
+// `redirect: 'manual'` to avoid following the 301 (we want to MEASURE the
+// redirect, not follow it). Response body / headers may be opaque depending
+// on the property's CORS config; latency is always recorded via fetch
+// completion time. Use Probe One for a single inspectable request.
+// ===========================================================================
+
+let ltState = {
+  running: false,
+  paths: [],
+  host: '',
+  rate: 0,
+  duration: 0,
+  startedAt: 0,
+  fired: 0,
+  completed: 0,
+  errors: 0,
+  latencies: [],
+  recent: [],
+  intervalId: null,
+  entryBuf: {},      // url -> resource entry, populated by observer
+};
+
+// PerformanceObserver captures resource entries as they land — more
+// reliable than getEntriesByName when fetches are concurrent and entries
+// can arrive slightly after fetch() resolves. We stash by name so
+// finishLt can look it up by URL.
+try {
+  const _ltObs = new PerformanceObserver((list) => {
+    for (const e of list.getEntries()) {
+      if (e.entryType === 'resource' && ltState.entryBuf) {
+        ltState.entryBuf[e.name] = e;
+      }
+    }
+  });
+  _ltObs.observe({ type: 'resource', buffered: true });
+} catch (e) { /* older browsers */ }
+
+const LT_HIST_BUCKETS = [
+  { lo: 0,    hi: 25,   label: '0-25ms' },
+  { lo: 25,   hi: 50,   label: '25-50ms' },
+  { lo: 50,   hi: 100,  label: '50-100ms' },
+  { lo: 100,  hi: 250,  label: '100-250ms' },
+  { lo: 250,  hi: 500,  label: '250-500ms' },
+  { lo: 500,  hi: 1000, label: '500ms-1s' },
+  { lo: 1000, hi: Infinity, label: '>1s' },
+];
+
+async function ltOnTabOpen() {
+  const hostInput = document.getElementById('ltHost');
+  if (!hostInput.value) {
+    // Prefill with the host that has the most rules — anything with single-
+    // digit rule_count is almost certainly a probe / verify-test scratch
+    // host, not where you want to drive load.
+    try {
+      const r = await fetch('/api/v1/hosts?token=' + encodeURIComponent(authToken()));
+      if (r.ok) {
+        const hosts = await r.json();
+        if (Array.isArray(hosts) && hosts.length) {
+          hosts.sort((a, b) => (b.rule_count || 0) - (a.rule_count || 0));
+          hostInput.value = hosts[0].host;
+        }
+      }
+    } catch (e) {
+      const sel = document.getElementById('hostFilter');
+      const opt = sel && sel.options[1];
+      if (opt) hostInput.value = opt.value;
+    }
+  }
+  ltRender();
+}
+
+async function ltSamplePaths(host, n) {
+  // Pull a sample from /api/v1/rules. limit is capped server-side so we
+  // chunk if asked for many — but for sample sizes <500 a single page
+  // is fine.
+  const params = new URLSearchParams();
+  params.set('host', host);
+  params.set('limit', String(Math.max(n, 50)));
+  params.set('offset', '0');
+  params.set('token', authToken());
+  const r = await fetch('/api/v1/rules?' + params.toString());
+  if (!r.ok) throw new Error('rules fetch failed: ' + r.status);
+  const data = await r.json();
+  const items = (data.items || []).filter(x => x.match_type === 'exact' && x.enabled);
+  if (items.length === 0) throw new Error('no exact rules found for host');
+  // Sample without replacement; if the API returned fewer than n, use all
+  const out = [];
+  const pool = items.slice();
+  while (out.length < n && pool.length) {
+    const i = Math.floor(Math.random() * pool.length);
+    out.push(pool.splice(i, 1)[0].path);
+  }
+  return out;
+}
+
+function authToken() {
+  // Same path the rest of the UI uses to embed the token in requests
+  const url = new URL(window.location.href);
+  return url.searchParams.get('token') || '';
+}
+
+async function ltStart() {
+  if (ltState.running) return;
+  const host = document.getElementById('ltHost').value.trim();
+  const rate = parseInt(document.getElementById('ltRate').value, 10) || 20;
+  const dur = parseInt(document.getElementById('ltDur').value, 10) || 20;
+  const sampleN = parseInt(document.getElementById('ltSample').value, 10) || 100;
+  if (!host) { alert('host required'); return; }
+  document.getElementById('ltStart').disabled = true;
+  document.getElementById('ltStop').disabled = false;
+  ltState = {
+    running: true, paths: [], host, rate, duration: dur,
+    startedAt: performance.now(), fired: 0, completed: 0, errors: 0,
+    latencies: [], recent: [], intervalId: null,
+    entryBuf: {},
+  };
+  try {
+    ltState.paths = await ltSamplePaths(host, sampleN);
+  } catch (e) {
+    document.getElementById('ltStats').innerHTML =
+      '<span style="color:#c33">sample failed: ' + e.message + '</span>';
+    ltStop();
+    return;
+  }
+  // Schedule one tick per request. Spread `rate` requests across each second.
+  const tickMs = 1000 / rate;
+  const endAt = ltState.startedAt + dur * 1000;
+  ltState.intervalId = setInterval(() => {
+    if (!ltState.running || performance.now() >= endAt) { ltStop(); return; }
+    ltFireOne();
+  }, tickMs);
+  ltRender();
+  setTimeout(ltRender, 250);
+  ltState._renderId = setInterval(ltRender, 500);
+}
+
+function ltStop() {
+  if (ltState.intervalId) clearInterval(ltState.intervalId);
+  if (ltState._renderId) clearInterval(ltState._renderId);
+  ltState.intervalId = null;
+  ltState._renderId = null;
+  ltState.running = false;
+  document.getElementById('ltStart').disabled = false;
+  document.getElementById('ltStop').disabled = true;
+  ltRender();
+}
+
+function ltFireOne() {
+  const path = ltState.paths[Math.floor(Math.random() * ltState.paths.length)];
+  const url = 'https://' + ltState.host + path;
+  const tStart = performance.now();
+  ltState.fired++;
+  // mode:'no-cors' + redirect:'error': fetch sends GET, Akamai returns
+  // 301, browser rejects the promise immediately (instead of chasing the
+  // 301 to the downstream target, which can be slow).
+  // The catch fires when the 301 lands at the browser, so wall time =
+  // edge-only response time. No header reads, no Performance API tricks —
+  // just `performance.now()` either side of the fetch.
+  fetch(url, {
+    method: 'GET',
+    mode: 'no-cors',
+    redirect: 'error',
+    cache: 'no-store',
+    credentials: 'omit',
+    keepalive: true,
+  }).then(() => {
+    // Rare: rule maps to a 200 instead of a 3xx — record the time anyway.
+    const ms = performance.now() - tStart;
+    ltState.completed++;
+    ltState.latencies.push(ms);
+    ltState.recent.unshift({ t: tStart - ltState.startedAt, ms, status: '200', url });
+    if (ltState.recent.length > 20) ltState.recent.length = 20;
+  }).catch(() => {
+    // Expected path: 301 caused redirect:'error' to fail the fetch. The
+    // catch fires when the response status line arrives at the browser.
+    const ms = performance.now() - tStart;
+    ltState.completed++;
+    ltState.latencies.push(ms);
+    ltState.recent.unshift({ t: tStart - ltState.startedAt, ms, status: '3xx', url });
+    if (ltState.recent.length > 20) ltState.recent.length = 20;
+  });
+}
+
+function finishLt(tStart, url, wallMs, status) {
+  // We use a PerformanceObserver (set up once globally below) to capture
+  // resource entries as they land. Look up the matching entry by URL out
+  // of the per-URL buffer. This is more reliable than getEntriesByName
+  // when many fetches are concurrent and entries arrive after their
+  // fetch() resolves.
+  const tryReport = (allowFallback) => {
+    let ttfbMs = null;
+    let serverMs = null;
+    const entry = ltState.entryBuf[url];
+    if (entry) {
+      if (entry.responseStart > 0 && entry.requestStart > 0) {
+        ttfbMs = entry.responseStart - entry.requestStart;
+      }
+      if (Array.isArray(entry.serverTiming)) {
+        const ew = entry.serverTiming.find(t => t.name === 'ew');
+        if (ew && typeof ew.duration === 'number' && ew.duration >= 0) {
+          serverMs = ew.duration;
+        }
+      }
+      if (ltState.completed < 2) {
+        // eslint-disable-next-line no-console
+        console.log('[ltRig] entry:', {
+          name: entry.name,
+          serverTiming: entry.serverTiming,
+          requestStart: entry.requestStart,
+          responseStart: entry.responseStart,
+          startTime: entry.startTime,
+          ttfb_ms: ttfbMs,
+        });
+      }
+      delete ltState.entryBuf[url];
+    }
+    if (ttfbMs == null && !allowFallback) return false;
+    const reportMs = ttfbMs != null ? ttfbMs : wallMs;
+    ltState.completed++;
+    ltState.latencies.push(reportMs);
+    ltState.recent.unshift({
+      t: tStart - ltState.startedAt,
+      ms: reportMs,
+      server: serverMs,
+      wall: wallMs,
+      hasTtfb: ttfbMs != null,
+      status,
+      url,
+    });
+    if (ltState.recent.length > 20) ltState.recent.length = 20;
+    return true;
+  };
+  if (!tryReport(false)) {
+    // serverTiming wasn't there yet; retry next tick before falling back.
+    requestAnimationFrame(() => { tryReport(true); });
+  }
+}
+
+function ltPercentile(arr, p) {
+  if (!arr.length) return 0;
+  const sorted = arr.slice().sort((a, b) => a - b);
+  const i = Math.min(sorted.length - 1, Math.floor(sorted.length * p));
+  return sorted[i];
+}
+
+function ltRender() {
+  const s = ltState;
+  const stats = document.getElementById('ltStats');
+  const elapsed = s.startedAt ? (performance.now() - s.startedAt) / 1000 : 0;
+  const rateNow = elapsed > 0 ? (s.completed / elapsed).toFixed(1) : '0.0';
+  const p50 = ltPercentile(s.latencies, 0.5).toFixed(1);
+  const p95 = ltPercentile(s.latencies, 0.95).toFixed(1);
+  const p99 = ltPercentile(s.latencies, 0.99).toFixed(1);
+  const mean = s.latencies.length
+    ? (s.latencies.reduce((a, b) => a + b, 0) / s.latencies.length).toFixed(1)
+    : '0.0';
+  stats.innerHTML = [
+    `state:     <strong>${s.running ? 'running' : 'idle'}</strong>`,
+    `elapsed:   ${elapsed.toFixed(1)}s${s.duration ? ' / ' + s.duration + 's' : ''}`,
+    `fired:     ${s.fired}`,
+    `completed: ${s.completed}  (${s.errors} errors)`,
+    `rate:      ${rateNow} req/s`,
+    `mean:      ${mean} ms`,
+    `p50:       ${p50} ms`,
+    `p95:       ${p95} ms`,
+    `p99:       ${p99} ms`,
+  ].join('<br>');
+
+  // Histogram
+  const counts = LT_HIST_BUCKETS.map(b => 0);
+  for (const ms of s.latencies) {
+    for (let i = 0; i < LT_HIST_BUCKETS.length; i++) {
+      if (ms >= LT_HIST_BUCKETS[i].lo && ms < LT_HIST_BUCKETS[i].hi) {
+        counts[i]++; break;
+      }
+    }
+  }
+  const max = Math.max(1, ...counts);
+  const histDiv = document.getElementById('ltHist');
+  histDiv.innerHTML = LT_HIST_BUCKETS.map((b, i) => {
+    const w = Math.round((counts[i] / max) * 100);
+    const pct = s.latencies.length
+      ? ((counts[i] / s.latencies.length) * 100).toFixed(1)
+      : '0.0';
+    return (
+      '<div style="display:flex; align-items:center; gap:0.4em; font-size:0.85em; line-height:1.3em;">'
+      + '<div style="width:9em; opacity:0.85">' + b.label + '</div>'
+      + '<div style="flex:1; background:rgba(127,127,127,0.15); height:1.2em; position:relative;">'
+      +   '<div style="width:' + w + '%; background:#5b9; height:100%;"></div>'
+      + '</div>'
+      + '<div style="width:7em; text-align:right; font-family:ui-monospace,monospace;">'
+      +    counts[i] + ' (' + pct + '%)</div>'
+      + '</div>'
+    );
+  }).join('');
+
+  const tbody = document.getElementById('ltRecent');
+  tbody.innerHTML = s.recent.map(r =>
+    '<tr>'
+    + '<td>' + r.t.toFixed(0) + '</td>'
+    + '<td>' + r.ms.toFixed(1) + '</td>'
+    + '<td>' + r.status + '</td>'
+    + '<td style="font-family:ui-monospace,monospace; font-size:0.85em; word-break:break-all;">' + r.url + '</td>'
+    + '</tr>'
+  ).join('');
+}
+
+async function ltProbe() {
+  const host = (document.getElementById('ltHost').value || '').trim();
+  if (!host) { alert('host required'); return; }
+  const out = document.getElementById('ltProbeOut');
+  out.textContent = 'sampling rule + sending probe...';
+  document.getElementById('ltProbeModal').style.display = 'flex';
+  let path;
+  try {
+    const paths = await ltSamplePaths(host, 1);
+    path = paths[0];
+  } catch (e) {
+    out.textContent = 'sample failed: ' + e.message;
+    return;
+  }
+  const url = 'https://' + host + path;
+  const tStart = performance.now();
+  let resp, ms, opaque = false;
+  try {
+    resp = await fetch(url, {
+      method: 'GET', redirect: 'manual', mode: 'cors',
+      cache: 'no-store', credentials: 'omit',
+    });
+    ms = performance.now() - tStart;
+  } catch (e) {
+    // CORS often surfaces as TypeError. Retry no-cors so we still time it.
+    opaque = true;
+    try {
+      resp = await fetch(url, {
+        method: 'GET', redirect: 'manual', mode: 'no-cors',
+        cache: 'no-store', credentials: 'omit',
+      });
+      ms = performance.now() - tStart;
+    } catch (e2) {
+      out.textContent = 'fetch failed: ' + e2.message;
+      return;
+    }
+  }
+  const lines = [];
+  lines.push('URL:     ' + url);
+  lines.push('Latency: ' + ms.toFixed(1) + ' ms');
+  lines.push('type:    ' + resp.type);
+  lines.push('status:  ' + (resp.status || '(opaque)'));
+  if (resp.headers && typeof resp.headers.forEach === 'function') {
+    lines.push('');
+    lines.push('Headers (browser-readable subset; CORS-restricted):');
+    let any = false;
+    resp.headers.forEach((v, k) => { lines.push('  ' + k + ': ' + v); any = true; });
+    if (!any) {
+      lines.push('  (no headers visible — opaque or CORS-stripped)');
+      lines.push('');
+      lines.push('To enable header inspection from this origin, add to the Akamai property:');
+      lines.push('  Access-Control-Allow-Origin: *');
+      lines.push('Or run the offline harness from a controlled VM (see docs/loadtest-2026-04-30/).');
+    }
+  }
+  out.textContent = lines.join('\n');
+}
+
+// ===========================================================================
+// Verify tab — self-cleaning round-trip tests for the admin API. Each test
+// creates rules under a synthetic host that nothing else uses, asserts the
+// API behaves correctly, and deletes everything before returning. Pattern
+// borrowed from project-nats-kv/ui/nats-kv-user/src/lib.rs `/verify`.
+// ===========================================================================
+
+const VFY_HOST_PREFIX = 'vfy-' + Math.floor(Date.now() / 1000) + '-';
+
+function vfyOnTabOpen() {
+  if (!document.getElementById('vfyRows').children.length) {
+    vfyRenderIdle();
+  }
+}
+
+function vfyRenderIdle() {
+  const tbody = document.getElementById('vfyRows');
+  tbody.innerHTML = VFY_TESTS.map((t, i) =>
+    '<tr id="vfy-row-' + i + '">'
+    + '<td>' + t.name + '</td>'
+    + '<td><span style="color:#888">idle</span></td>'
+    + '<td class="small" style="opacity:0.6">—</td>'
+    + '<td style="text-align:right; font-family:ui-monospace,monospace; font-size:0.85em">—</td>'
+    + '</tr>'
+  ).join('');
+  document.getElementById('vfySummary').innerHTML = '';
+  document.getElementById('vfyStatus').textContent = '';
+}
+
+async function vfyApiCall(method, path, body, opts) {
+  opts = opts || {};
+  const init = {
+    method,
+    headers: { 'content-type': 'application/json', ...(opts.headers || {}) },
+  };
+  if (body !== undefined) init.body = typeof body === 'string' ? body : JSON.stringify(body);
+  // Append ?async=1 to mutating calls to the rules / import endpoints —
+  // skips inline EdgeKV write, queues a marker instead. Each verify test
+  // runs in <1s instead of 4-6s. The reconcile worker drains markers
+  // separately. Excludes paths the API doesn't accept the flag on.
+  const isMutate = method === 'POST' || method === 'PUT' || method === 'DELETE';
+  const wantsAsync = isMutate
+    && (path.startsWith('/v1/rules') || path.startsWith('/v1/import') || path.startsWith('/v1/hosts'));
+  const sep = path.indexOf('?') >= 0 ? '&' : '?';
+  const asyncTail = wantsAsync ? sep + 'async=1&token=' : sep + 'token=';
+  const url = '/api' + path + asyncTail + encodeURIComponent(authToken());
+  const t0 = performance.now();
+  const r = await fetch(url, init);
+  const ms = performance.now() - t0;
+  let parsed = null;
+  const text = await r.text();
+  try { parsed = JSON.parse(text); } catch (e) { parsed = text; }
+  return { status: r.status, body: parsed, raw: text, ms };
+}
+
+function vfyMakeRule(host, path, target, extra) {
+  return Object.assign({
+    host: host,
+    match_type: 'exact',
+    path: path,
+    target_url: target,
+    status_code: 301,
+    preserve_query: true,
+    preserve_path: false,
+    priority: 0,
+    enabled: true,
+    case_insensitive: false,
+  }, extra || {});
+}
+
+const VFY_TESTS = [
+  {
+    name: '01. POST /v1/rules creates a rule and is fetchable',
+    run: async (n) => {
+      const host = VFY_HOST_PREFIX + n + '.example.invalid';
+      const rule = vfyMakeRule(host, '/canary', 'https://example.com/canary');
+      const cr = await vfyApiCall('POST', '/v1/rules', rule);
+      if (cr.status !== 201 && cr.status !== 200) {
+        return { ok: false, detail: 'POST status=' + cr.status + ' body=' + cr.raw.slice(0, 160), cleanup: [] };
+      }
+      const get = await vfyApiCall('GET', '/v1/rules/' + encodeURIComponent(host) + '/exact/canary');
+      if (get.status !== 200) return { ok: false, detail: 'GET after POST status=' + get.status, cleanup: [host] };
+      if (!get.body || get.body.target_url !== rule.target_url) {
+        return { ok: false, detail: 'target_url mismatch: got ' + JSON.stringify(get.body).slice(0, 120), cleanup: [host] };
+      }
+      return { ok: true, detail: 'created + fetched for ' + host, cleanup: [host] };
+    },
+  },
+  {
+    name: '02. POST /v1/rules duplicate returns 409',
+    run: async (n) => {
+      const host = VFY_HOST_PREFIX + n + '.example.invalid';
+      const rule = vfyMakeRule(host, '/dup', 'https://example.com/dup');
+      const a = await vfyApiCall('POST', '/v1/rules', rule);
+      if (a.status >= 300) return { ok: false, detail: 'first POST status=' + a.status, cleanup: [host] };
+      const b = await vfyApiCall('POST', '/v1/rules', rule);
+      if (b.status !== 409) return { ok: false, detail: 'expected 409, got ' + b.status, cleanup: [host] };
+      return { ok: true, detail: 'duplicate POST correctly 409', cleanup: [host] };
+    },
+  },
+  {
+    name: '03. PUT /v1/rules/... updates existing rule',
+    run: async (n) => {
+      const host = VFY_HOST_PREFIX + n + '.example.invalid';
+      const rule = vfyMakeRule(host, '/upd', 'https://example.com/v1');
+      const post = await vfyApiCall('POST', '/v1/rules', rule);
+      if (post.status >= 300) return { ok: false, detail: 'POST status=' + post.status, cleanup: [host] };
+      const updated = vfyMakeRule(host, '/upd', 'https://example.com/v2', { status_code: 302 });
+      const put = await vfyApiCall('PUT', '/v1/rules/' + encodeURIComponent(host) + '/exact/upd', updated);
+      if (put.status !== 200) return { ok: false, detail: 'PUT status=' + put.status + ' body=' + put.raw.slice(0, 120), cleanup: [host] };
+      const get = await vfyApiCall('GET', '/v1/rules/' + encodeURIComponent(host) + '/exact/upd');
+      if (!get.body || get.body.target_url !== 'https://example.com/v2' || get.body.status_code !== 302) {
+        return { ok: false, detail: 'GET after PUT did not reflect update: ' + JSON.stringify(get.body).slice(0, 160), cleanup: [host] };
+      }
+      return { ok: true, detail: 'PUT updated target + status_code', cleanup: [host] };
+    },
+  },
+  {
+    name: '04. DELETE /v1/rules/... removes the rule',
+    run: async (n) => {
+      const host = VFY_HOST_PREFIX + n + '.example.invalid';
+      const rule = vfyMakeRule(host, '/del', 'https://example.com/del');
+      const post = await vfyApiCall('POST', '/v1/rules', rule);
+      if (post.status >= 300) return { ok: false, detail: 'POST status=' + post.status, cleanup: [host] };
+      const del = await vfyApiCall('DELETE', '/v1/rules/' + encodeURIComponent(host) + '/exact/del');
+      if (del.status !== 200) return { ok: false, detail: 'DELETE status=' + del.status, cleanup: [host] };
+      const get = await vfyApiCall('GET', '/v1/rules/' + encodeURIComponent(host) + '/exact/del');
+      if (get.status !== 404) return { ok: false, detail: 'expected 404 after delete, got ' + get.status, cleanup: [host] };
+      return { ok: true, detail: 'DELETE → 404', cleanup: [] };
+    },
+  },
+  {
+    name: '05. POST /v1/import upserts an array of rules',
+    run: async (n) => {
+      const host = VFY_HOST_PREFIX + n + '.example.invalid';
+      const rules = [1, 2, 3].map((i) => vfyMakeRule(host, '/imp' + i, 'https://example.com/imp' + i));
+      const r = await vfyApiCall('POST', '/v1/import', rules);
+      if (r.status !== 200) return { ok: false, detail: 'import status=' + r.status + ' body=' + r.raw.slice(0, 200), cleanup: [host] };
+      if (!r.body || r.body.added !== 3) {
+        return { ok: false, detail: 'expected added=3, got ' + JSON.stringify(r.body).slice(0, 160), cleanup: [host] };
+      }
+      return { ok: true, detail: 'imported 3 rules', cleanup: [host] };
+    },
+  },
+  {
+    name: '06. POST /v1/import is idempotent (re-import → unchanged)',
+    run: async (n) => {
+      const host = VFY_HOST_PREFIX + n + '.example.invalid';
+      const rules = [1, 2].map((i) => vfyMakeRule(host, '/idem' + i, 'https://example.com/idem' + i));
+      await vfyApiCall('POST', '/v1/import', rules);
+      const r = await vfyApiCall('POST', '/v1/import', rules);
+      if (r.status !== 200) return { ok: false, detail: 'second import status=' + r.status, cleanup: [host] };
+      if (!r.body || r.body.unchanged !== 2 || r.body.added !== 0) {
+        return { ok: false, detail: 'expected unchanged=2, added=0, got ' + JSON.stringify(r.body).slice(0, 160), cleanup: [host] };
+      }
+      return { ok: true, detail: 'idempotent: unchanged=2, added=0', cleanup: [host] };
+    },
+  },
+  {
+    name: '07. GET /v1/test/<host>/<path> resolves a rule',
+    run: async (n) => {
+      const host = VFY_HOST_PREFIX + n + '.example.invalid';
+      const rule = vfyMakeRule(host, '/lookup', 'https://example.com/lookup-target');
+      await vfyApiCall('POST', '/v1/rules', rule);
+      const r = await vfyApiCall('GET', '/v1/test/' + encodeURIComponent(host) + '/lookup');
+      if (r.status !== 200) return { ok: false, detail: 'test status=' + r.status + ' body=' + r.raw.slice(0, 160), cleanup: [host] };
+      const loc = r.body && (r.body.location || r.body.target_url || (r.body.rule && r.body.rule.target_url));
+      if (!loc || String(loc).indexOf('lookup-target') < 0) {
+        return { ok: false, detail: 'lookup did not return target: ' + JSON.stringify(r.body).slice(0, 200), cleanup: [host] };
+      }
+      return { ok: true, detail: 'resolved to ' + loc, cleanup: [host] };
+    },
+  },
+  {
+    name: '08. GET /v1/stats returns counts and sync block',
+    run: async (n) => {
+      const r = await vfyApiCall('GET', '/v1/stats');
+      if (r.status !== 200) return { ok: false, detail: 'stats status=' + r.status, cleanup: [] };
+      if (!r.body || typeof r.body.total_rules !== 'number' || !r.body.sync) {
+        return { ok: false, detail: 'unexpected shape: ' + JSON.stringify(r.body).slice(0, 200), cleanup: [] };
+      }
+      return { ok: true, detail: 'total_rules=' + r.body.total_rules + ' hosts=' + r.body.unique_hosts, cleanup: [] };
+    },
+  },
+  {
+    name: '09. GET /v1/rules supports ?host filter + pagination',
+    run: async (n) => {
+      const host = VFY_HOST_PREFIX + n + '.example.invalid';
+      const rules = [1, 2, 3, 4, 5].map((i) => vfyMakeRule(host, '/p' + i, 'https://example.com/p' + i));
+      await vfyApiCall('POST', '/v1/import', rules);
+      const a = await vfyApiCall('GET', '/v1/rules?host=' + encodeURIComponent(host) + '&limit=2&offset=0');
+      if (a.status !== 200) return { ok: false, detail: 'page1 status=' + a.status, cleanup: [host] };
+      if (!a.body || !Array.isArray(a.body.items) || a.body.items.length !== 2 || a.body.matched_total !== 5) {
+        return { ok: false, detail: 'page1 unexpected: ' + JSON.stringify(a.body).slice(0, 200), cleanup: [host] };
+      }
+      const b = await vfyApiCall('GET', '/v1/rules?host=' + encodeURIComponent(host) + '&limit=2&offset=2');
+      if (!b.body || b.body.items.length !== 2) {
+        return { ok: false, detail: 'page2 unexpected: ' + JSON.stringify(b.body).slice(0, 200), cleanup: [host] };
+      }
+      return { ok: true, detail: 'page1=2/5, page2=2/5, matched_total=5', cleanup: [host] };
+    },
+  },
+  {
+    name: '10. PUT /v1/hosts/<host> sets case_insensitive flag',
+    run: async (n) => {
+      const host = VFY_HOST_PREFIX + n + '.example.invalid';
+      await vfyApiCall('POST', '/v1/rules', vfyMakeRule(host, '/seed', 'https://example.com/seed'));
+      const put = await vfyApiCall('PUT', '/v1/hosts/' + encodeURIComponent(host),
+        { host: host, enabled: true, case_sensitive: false, rule_count: 0 });
+      if (put.status !== 200) return { ok: false, detail: 'PUT host status=' + put.status + ' body=' + put.raw.slice(0, 160), cleanup: [host] };
+      if (!put.body || put.body.case_sensitive !== false) {
+        return { ok: false, detail: 'flag not flipped: ' + JSON.stringify(put.body).slice(0, 160), cleanup: [host] };
+      }
+      return { ok: true, detail: 'host marked case_sensitive=false', cleanup: [host] };
+    },
+  },
+  {
+    name: '11. POST /v1/rules with invalid body returns 400',
+    run: async (n) => {
+      const r = await vfyApiCall('POST', '/v1/rules', { host: '', match_type: 'exact', path: '/' });
+      if (r.status !== 400) return { ok: false, detail: 'expected 400, got ' + r.status, cleanup: [] };
+      return { ok: true, detail: 'malformed → 400', cleanup: [] };
+    },
+  },
+  {
+    name: '12. Auth: missing token returns 401',
+    run: async (n) => {
+      const r = await fetch('/api/v1/stats', { method: 'GET' });
+      if (r.status !== 401) {
+        return { ok: false, detail: 'expected 401, got ' + r.status, cleanup: [] };
+      }
+      return { ok: true, detail: 'unauth → 401', cleanup: [] };
+    },
+  },
+];
+
+async function vfyDeleteHostRules(host) {
+  try {
+    const r = await vfyApiCall('GET', '/v1/rules?host=' + encodeURIComponent(host) + '&limit=200');
+    if (r.status !== 200 || !r.body || !Array.isArray(r.body.items)) return;
+    for (const rule of r.body.items) {
+      const trimmed = rule.path.startsWith('/') ? rule.path.slice(1) : rule.path;
+      await vfyApiCall('DELETE', '/v1/rules/' + encodeURIComponent(rule.host) + '/' + rule.match_type + '/' + trimmed);
+    }
+  } catch (e) {}
+}
+
+function vfySetRow(i, status, detail, ms) {
+  const row = document.getElementById('vfy-row-' + i);
+  if (!row) return;
+  const tds = row.querySelectorAll('td');
+  const colors = { idle: '#888', run: '#59f', pass: '#3fb950', fail: '#f85149' };
+  tds[1].innerHTML = '<span style="color:' + colors[status] + '; font-weight:600">' + status + '</span>';
+  tds[2].innerHTML = '<span style="' + (status === 'fail' ? 'color:#c33' : 'opacity:0.85') + '">' + detail + '</span>';
+  tds[3].textContent = ms != null ? ms.toFixed(0) + ' ms' : '—';
+}
+
+async function vfyRunAll() {
+  const btn = document.getElementById('vfyRun');
+  btn.disabled = true;
+  vfyRenderIdle();
+  document.getElementById('vfyStatus').textContent = 'running...';
+  const summaryEl = document.getElementById('vfySummary');
+  summaryEl.innerHTML = '<div class="small" style="padding:0.6em; background:rgba(91,153,255,0.1); border-left:3px solid #59f; margin: 0.4em 0">Running ' + VFY_TESTS.length + ' tests…</div>';
+
+  let passed = 0, failed = 0;
+  const cleanupHosts = new Set();
+  for (let i = 0; i < VFY_TESTS.length; i++) {
+    const t = VFY_TESTS[i];
+    vfySetRow(i, 'run', '...', null);
+    const t0 = performance.now();
+    let result;
+    try {
+      result = await t.run(i + 1);
+    } catch (e) {
+      result = { ok: false, detail: 'exception: ' + (e && e.message ? e.message : e), cleanup: [] };
+    }
+    const ms = performance.now() - t0;
+    if (result.ok) { passed++; vfySetRow(i, 'pass', result.detail || 'ok', ms); }
+    else { failed++; vfySetRow(i, 'fail', result.detail || 'failed', ms); }
+    for (const h of (result.cleanup || [])) cleanupHosts.add(h);
+  }
+
+  document.getElementById('vfyStatus').textContent = 'cleaning up ' + cleanupHosts.size + ' scratch hosts...';
+  for (const h of cleanupHosts) await vfyDeleteHostRules(h);
+
+  const total = passed + failed;
+  const summary = failed === 0
+    ? '<div class="small" style="padding:0.6em; background:rgba(63,185,80,0.12); border-left:3px solid #3fb950; margin: 0.4em 0; color:#3fb950"><strong>' + passed + '/' + total + ' passed.</strong> All API surfaces behaved as documented.</div>'
+    : '<div class="small" style="padding:0.6em; background:rgba(248,81,73,0.12); border-left:3px solid #f85149; margin: 0.4em 0; color:#f85149"><strong>' + passed + '/' + total + ' passed, ' + failed + ' failed.</strong> See per-row detail above.</div>';
+  summaryEl.innerHTML = summary;
+  document.getElementById('vfyStatus').textContent = '';
+  btn.disabled = false;
+}
+
+</script>
+</body>
+</html>

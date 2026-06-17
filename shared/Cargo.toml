@@ -1,0 +1,30 @@
+[package]
+name = "shared"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+# Enables the EdgeKV client + EdgeGrid auth. Optional so the redirect-handler
+# component (which only reads Spin KV) stays lean.
+ekv-client = [
+  "dep:hmac",
+  "dep:sha2",
+  "dep:hex",
+  "dep:base64",
+  "dep:rand",
+  "dep:url",
+]
+
+[dependencies]
+spin-sdk = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }
+futures = { workspace = true }
+hmac = { workspace = true, optional = true }
+sha2 = { workspace = true, optional = true }
+hex = { workspace = true, optional = true }
+base64 = { workspace = true, optional = true }
+rand = { workspace = true, optional = true }
+url = { workspace = true, optional = true }
